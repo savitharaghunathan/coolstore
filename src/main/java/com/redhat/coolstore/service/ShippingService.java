@@ -3,41 +3,40 @@ package com.redhat.coolstore.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.QueryParam;
+import jakarta.enterprise.context.ApplicationScoped;
+
 import com.redhat.coolstore.model.ShoppingCart;
 
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
-
+@ApplicationScoped
 @Path("/shipping")
 public class ShippingService {
 
     @POST
-    @Path("/calculateShipping")
-    public double calculateShipping(ShoppingCart sc) {
+    @Path("/calculate-shipping")
+    public double calculateShipping(@QueryParam("cartItemTotal") double cartItemTotal) {
 
-        if (sc != null) {
+        if (cartItemTotal >= 0 && cartItemTotal < 25) {
 
-            if (sc.getCartItemTotal() >= 0 && sc.getCartItemTotal() < 25) {
+            return 2.99;
 
-                return 2.99;
+        } else if (cartItemTotal >= 25 && cartItemTotal < 50) {
 
-            } else if (sc.getCartItemTotal() >= 25 && sc.getCartItemTotal() < 50) {
+            return 4.99;
 
-                return 4.99;
+        } else if (cartItemTotal >= 50 && cartItemTotal < 75) {
 
-            } else if (sc.getCartItemTotal() >= 50 && sc.getCartItemTotal() < 75) {
+            return 6.99;
 
-                return 6.99;
+        } else if (cartItemTotal >= 75 && cartItemTotal < 100) {
 
-            } else if (sc.getCartItemTotal() >= 75 && sc.getCartItemTotal() < 100) {
+            return 8.99;
 
-                return 8.99;
+        } else if (cartItemTotal >= 100 && cartItemTotal < 10000) {
 
-            } else if (sc.getCartItemTotal() >= 100 && sc.getCartItemTotal() < 10000) {
-
-                return 10.99;
-
-            }
+            return 10.99;
 
         }
 
@@ -46,24 +45,20 @@ public class ShippingService {
     }
 
     @POST
-    @Path("/calculateShippingInsurance")
-    public double calculateShippingInsurance(ShoppingCart sc) {
+    @Path("/calculate-shipping-insurance")
+    public double calculateShippingInsurance(@QueryParam("cartItemTotal") double cartItemTotal) {
 
-        if (sc != null) {
+        if (cartItemTotal >= 25 && cartItemTotal < 100) {
 
-            if (sc.getCartItemTotal() >= 25 && sc.getCartItemTotal() < 100) {
+            return getPercentOfTotal(cartItemTotal, 0.02);
 
-                return getPercentOfTotal(sc.getCartItemTotal(), 0.02);
+        } else if (cartItemTotal >= 100 && cartItemTotal < 500) {
 
-            } else if (sc.getCartItemTotal() >= 100 && sc.getCartItemTotal() < 500) {
+            return getPercentOfTotal(cartItemTotal, 0.015);
 
-                return getPercentOfTotal(sc.getCartItemTotal(), 0.015);
+        } else if (cartItemTotal >= 500 && cartItemTotal < 10000) {
 
-            } else if (sc.getCartItemTotal() >= 500 && sc.getCartItemTotal() < 10000) {
-
-                return getPercentOfTotal(sc.getCartItemTotal(), 0.01);
-
-            }
+            return getPercentOfTotal(cartItemTotal, 0.01);
 
         }
 
