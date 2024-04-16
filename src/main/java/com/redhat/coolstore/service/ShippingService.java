@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.POST;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.QueryParam;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -14,7 +14,7 @@ import com.redhat.coolstore.model.ShoppingCart;
 @Path("/shipping")
 public class ShippingService {
 
-    @POST
+    @GET
     @Path("/calculate-shipping")
     public double calculateShipping(@QueryParam("cartItemTotal") double cartItemTotal) {
 
@@ -44,7 +44,7 @@ public class ShippingService {
 
     }
 
-    @POST
+    @GET
     @Path("/calculate-shipping-insurance")
     public double calculateShippingInsurance(@QueryParam("cartItemTotal") double cartItemTotal) {
 
