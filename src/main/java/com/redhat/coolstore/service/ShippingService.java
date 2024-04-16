@@ -15,7 +15,7 @@ public class ShippingService {
 
     @POST
     @Path("/calculate-shipping")
-    public Response calculateShipping(@PathParam("sc") ShoppingCart sc) {
+    public Response calculateShipping(ShoppingCart sc) {
 
         if (sc != null) {
 
@@ -49,7 +49,7 @@ public class ShippingService {
 
     @POST
     @Path("/calculate-shipping-insurance")
-    public Response calculateShippingInsurance(@PathParam("sc") ShoppingCart sc) {
+    public Response calculateShippingInsurance(ShoppingCart sc) {
 
         if (sc != null) {
 
