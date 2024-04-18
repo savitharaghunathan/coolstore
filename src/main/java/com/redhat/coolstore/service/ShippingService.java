@@ -3,16 +3,16 @@ package com.redhat.coolstore.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import javax.ejb.Remote;
+import javax.ejb.Stateless;
+
 import com.redhat.coolstore.model.ShoppingCart;
 
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
+@Stateless
+@Remote
+public class ShippingService implements ShippingServiceRemote {
 
-@Path("/shipping")
-public class ShippingService {
-
-    @POST
-    @Path("/calculateShipping")
+    @Override
     public double calculateShipping(ShoppingCart sc) {
 
         if (sc != null) {
@@ -45,8 +45,7 @@ public class ShippingService {
 
     }
 
-    @POST
-    @Path("/calculateShippingInsurance")
+    @Override
     public double calculateShippingInsurance(ShoppingCart sc) {
 
         if (sc != null) {
