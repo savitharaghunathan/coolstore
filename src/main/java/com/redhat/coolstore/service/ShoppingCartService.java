@@ -3,8 +3,8 @@ package com.redhat.coolstore.service;
 import java.util.Hashtable;
 import java.util.logging.Logger;
 
-import javax.ejb.Stateful;
-import javax.inject.Inject;
+import jakarta.ejb.Stateful;
+import jakarta.inject.Inject;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -111,7 +111,7 @@ public class ShoppingCartService  {
         return productServices.getProductByItemId(itemId);
     }
 
-	private static ShippingServiceRemote lookupShippingServiceRemote() {
+    private static ShippingServiceRemote lookupShippingServiceRemote() {
         try {
             final Hashtable<String, String> jndiProperties = new Hashtable<>();
             jndiProperties.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
