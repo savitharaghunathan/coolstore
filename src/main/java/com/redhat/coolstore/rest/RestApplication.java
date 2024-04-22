@@ -1,7 +1,7 @@
 package com.redhat.coolstore.rest;
 
-import jakarta.ws.rs.core.Application;
+// No import statement is needed
 
-public class RestApplication extends Application {
-
+public class RestApplication {
+    // No implementation is needed
 }

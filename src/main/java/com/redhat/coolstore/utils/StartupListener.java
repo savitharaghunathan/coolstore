@@ -4,6 +4,7 @@ import weblogic.application.ApplicationLifecycleEvent;
 import weblogic.application.ApplicationLifecycleListener;
 
 import jakarta.inject.Inject;
+import jakarta.enterprise.inject.Instance;
 import java.util.logging.Logger;
 
 public class StartupListener extends ApplicationLifecycleListener {

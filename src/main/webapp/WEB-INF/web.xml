@@ -1,4 +1,3 @@
-@InvalidateSession
 public class MyApplication extends QuarkusApplication {
     // application logic
 }

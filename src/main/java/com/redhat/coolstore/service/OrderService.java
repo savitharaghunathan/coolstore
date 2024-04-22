@@ -2,7 +2,6 @@ package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.Order;
 import java.util.List;
-import jakarta.ejb.Singleton;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;

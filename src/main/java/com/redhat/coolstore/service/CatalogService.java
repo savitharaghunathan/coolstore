@@ -4,12 +4,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import jakarta.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
 
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
-
-import jakarta.enterprise.context.ApplicationScoped;
 
 import com.redhat.coolstore.model.*;
 
@@ -20,7 +20,7 @@ public class CatalogService {
     Logger log;
 
     @Inject
-    private jakarta.persistence.EntityManager em;
+    private EntityManager em;
 
     public CatalogService() {
     }

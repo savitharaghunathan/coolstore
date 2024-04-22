@@ -3,7 +3,6 @@ package com.redhat.coolstore.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import jakarta.ejb.Singleton;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.POST;
