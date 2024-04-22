@@ -1,17 +1,16 @@
 package com.redhat.coolstore.utils;
 
-import javax.enterprise.inject.Produces;
-import javax.enterprise.inject.spi.InjectionPoint;
+import jakarta.enterprise.inject.InjectionPoint;
+import jakarta.enterprise.inject.spi.CDI;
 import java.util.logging.Logger;
-
 
 public class Producers {
 
-    Logger log = Logger.getLogger(Producers.class.getName());
+    private Logger log = CDI.current().select(Logger.class).get();
 
-    @Produces
+    @SuppressWarnings("unused")
     public Logger produceLog(InjectionPoint injectionPoint) {
-        return Logger.getLogger(injectionPoint.getMember().getDeclaringClass().getName());
+        return CDI.current().select(Logger.class, injectionPoint.getMember().getDeclaringClass()).get();
     }
 
 }

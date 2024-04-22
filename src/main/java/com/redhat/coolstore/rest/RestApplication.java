@@ -1,10 +1,8 @@
 package com.redhat.coolstore.rest;
 
-import javax.ws.rs.ApplicationPath;
-import javax.ws.rs.core.Application;
+import jakarta.ws.rs.core.Application;
 
-
-@ApplicationPath("/services")
+// @ApplicationPath("/services") // Not needed in Quarkus
 public class RestApplication extends Application {
 
 }
