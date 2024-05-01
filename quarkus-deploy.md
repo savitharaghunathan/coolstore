@@ -14,3 +14,4 @@ Make sure that you are logged in via terminal to OpenShift via the `oc` command
             mvn clean compile package -Dquarkus.kubernetes.deploy=true
 ```
 
+
