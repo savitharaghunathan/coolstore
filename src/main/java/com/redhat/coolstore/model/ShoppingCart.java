@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import jakarta.enterprise.context.Dependent;
+import javax.enterprise.context.Dependent;
 
 @Dependent
 public class ShoppingCart implements Serializable {
