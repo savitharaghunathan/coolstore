@@ -1,6 +1,6 @@
 package com.redhat.coolstore.model;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
@@ -8,7 +8,7 @@ import java.io.Serializable;
 public class CatalogItemEntity implements Serializable {
 
 	private static final long serialVersionUID = -7304814269819778382L;
-	
+
 	@Id
 	private String itemId;
 

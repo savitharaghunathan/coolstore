@@ -9,19 +9,16 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonWriter;
+import jakarta.json.Json;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
+import jakarta.json.JsonWriter;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Logger;
 
-/**
- * Created by tqvarnst on 2017-03-30.
- */
 public class Transformers {
 
     private static final String[] RANDOM_NAMES = {"Sven Karlsson","Johan Andersson","Karl Svensson","Anders Johansson","Stefan Olson","Martin Ericsson"};
@@ -64,7 +61,7 @@ public class Transformers {
             .add("discount", Double.valueOf(cart.getCartItemPromoSavings()))
             .add("shippingFee", Double.valueOf(cart.getShippingTotal()))
             .add("shippingDiscount", Double.valueOf(cart.getShippingPromoSavings()))
-            .add("items",cartItems) 
+            .add("items",cartItems)
             .build();
         StringWriter w = new StringWriter();
         try (JsonWriter writer = Json.createWriter(w)) {
@@ -92,7 +89,7 @@ public class Transformers {
             oi.setQuantity(jsonItem.getInt("quantity"));
             items.add(oi);
         }
-        order.setItemList(items); 
+        order.setItemList(items);
         return order;
     }
 
