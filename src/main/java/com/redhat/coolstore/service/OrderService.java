@@ -2,27 +2,27 @@ package com.redhat.coolstore.service;
 
 import com.enterprise.audit.logging.config.AuditConfiguration;
 import com.enterprise.audit.logging.exception.AuditLoggingException;
-import com.enterprise.audit.logging.service.FileSystemAuditLogger;
+import com.enterprise.audit.logging.service.StreamableAuditLogger;
 import com.redhat.coolstore.model.Order;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import jakarta.transaction.Transactional;
 
-@Stateless
+@ApplicationScoped
 public class OrderService {
 
   @Inject
   private EntityManager em;
 
+  @Transactional
   public void save(Order order) {
     em.persist(order);
   }
@@ -39,16 +39,14 @@ public class OrderService {
     return em.find(Order.class, id);
   }
 
-  private FileSystemAuditLogger auditLogger;
+  private StreamableAuditLogger auditLogger;
 
   @PostConstruct
   public void init() throws AuditLoggingException {
-    // Initialize audit logger
     AuditConfiguration config = new AuditConfiguration();
     config.setLogDirectory("./device-inventory-audit-logs");
     config.setAutoCreateDirectory(true);
-    auditLogger = new FileSystemAuditLogger(config);
-
+    auditLogger = new StreamableAuditLogger(config);
   }
 
   @PreDestroy
