@@ -15,7 +15,7 @@
         <maven.test.skip>true</maven.test.skip>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <quarkus.platform.version>3.0.0.Final</quarkus.platform.version>
+        <quarkus.platform.version>3.2.12.Final</quarkus.platform.version>
         <compiler-plugin.version>3.11.0</compiler-plugin.version>
         <surefire-plugin.version>3.0.0</surefire-plugin.version>
     </properties>
