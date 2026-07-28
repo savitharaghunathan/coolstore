@@ -5,16 +5,16 @@ import java.util.logging.Logger;
 
 import jakarta.inject.Inject;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
-import javax.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
 
 import com.redhat.coolstore.model.*;
 
-@Stateless
+@ApplicationScoped
 public class CatalogService {
 
     @Inject
