@@ -1,0 +1,421 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "migration_type": "javaee-to-quarkus",
+    "generated_at": "2026-07-28T19:56:00Z",
+    "interactive_mode": false
+  },
+  "detection": {
+    "summary": {
+      "language": "Java",
+      "language_version": "1.8",
+      "target_language_version": "17",
+      "build_tool": "Maven",
+      "build_tool_version": "3.0+",
+      "packaging": "war",
+      "application_server": "JBoss/WildFly",
+      "javaee_version": "7.0",
+      "source_file_count": 30
+    },
+    "frameworks": {
+      "ejb": {
+        "detected": true,
+        "stateless_beans": 5,
+        "stateful_beans": 1,
+        "message_driven_beans": 1,
+        "remote_interfaces": 1,
+        "details": [
+          "CatalogService (@Stateless)",
+          "OrderService (@Stateless)",
+          "ProductService (@Stateless)",
+          "ShippingService (@Stateless, @Remote)",
+          "ShoppingCartOrderProcessor (@Stateless)",
+          "ShoppingCartService (@Stateful)",
+          "OrderServiceMDB (@MessageDriven)"
+        ]
+      },
+      "jpa": {
+        "detected": true,
+        "version": "2.1",
+        "provider": "Hibernate",
+        "persistence_units": ["primary"],
+        "datasource_jndi": "java:jboss/datasources/CoolstoreDS",
+        "entities": 5
+      },
+      "jms": {
+        "detected": true,
+        "version": "2.0",
+        "topics": ["topic/orders"],
+        "message_driven_beans": 1,
+        "manual_listeners": 1,
+        "details": [
+          "OrderServiceMDB - consumes from topic/orders",
+          "InventoryNotificationMDB - manual JMS setup with WebLogic JNDI"
+        ]
+      },
+      "jax_rs": {
+        "detected": true,
+        "endpoints": 3,
+        "details": [
+          "CartEndpoint",
+          "OrderEndpoint",
+          "ProductEndpoint"
+        ]
+      },
+      "cdi": {
+        "detected": true,
+        "bean_discovery_mode": "all",
+        "beans_xml": "src/main/webapp/WEB-INF/beans.xml"
+      },
+      "database_migration": {
+        "detected": true,
+        "tool": "Flyway",
+        "version": "4.1.2"
+      },
+      "lifecycle": {
+        "detected": true,
+        "weblogic_listeners": 1,
+        "details": [
+          "StartupListener extends ApplicationLifecycleListener (WebLogic-specific)"
+        ]
+      }
+    },
+    "dependencies": {
+      "javaee_api": "7.0",
+      "javaee_web_api": "7.0",
+      "jboss_jms_api": "2.0.0.Final",
+      "jboss_rmi_api": "1.0.2.Final",
+      "flyway_core": "4.1.2",
+      "custom_libraries": [
+        {
+          "groupId": "com.enterprise",
+          "artifactId": "audit-logging-library",
+          "version": "1.0.0",
+          "scope": "system",
+          "path": "${project.basedir}/lib/audit-logging-library-1.0.0.jar"
+        }
+      ]
+    },
+    "configuration_files": {
+      "persistence_xml": "src/main/resources/META-INF/persistence.xml",
+      "web_xml": "src/main/webapp/WEB-INF/web.xml",
+      "beans_xml": "src/main/webapp/WEB-INF/beans.xml"
+    },
+    "vendor_specific": {
+      "weblogic": {
+        "detected": true,
+        "packages_used": [
+          "weblogic.application",
+          "weblogic.i18n.logging",
+          "weblogic.jndi"
+        ],
+        "jndi_lookups": true,
+        "lifecycle_listeners": true
+      }
+    }
+  },
+  "decisions": {
+    "java_version": {
+      "question": "Which Java version should the migrated application target?",
+      "options": [
+        {
+          "value": "17",
+          "label": "Java 17 (LTS, Quarkus 3 minimum)",
+          "recommended": true
+        },
+        {
+          "value": "21",
+          "label": "Java 21 (Latest LTS, best performance)",
+          "recommended": false
+        }
+      ],
+      "selected": "17",
+      "reasoning": "Java 17 is the minimum requirement for Quarkus 3 and provides a stable LTS foundation. Java 21 would require more extensive testing and validation. Java 17 offers the best balance of compatibility and modern features.",
+      "autonomous": true
+    },
+    "database_type": {
+      "question": "Which database will the application use?",
+      "options": [
+        {
+          "value": "postgresql",
+          "label": "PostgreSQL",
+          "recommended": true
+        },
+        {
+          "value": "h2",
+          "label": "H2 (in-memory, for development)",
+          "recommended": false
+        },
+        {
+          "value": "mysql",
+          "label": "MySQL/MariaDB",
+          "recommended": false
+        }
+      ],
+      "selected": "postgresql",
+      "reasoning": "The datasource JNDI name 'CoolstoreDS' and JBoss/WildFly environment typically indicate PostgreSQL usage. PostgreSQL is the most common production database for Quarkus applications and provides excellent compatibility.",
+      "autonomous": true
+    },
+    "messaging_broker": {
+      "question": "Which messaging broker should replace JMS?",
+      "options": [
+        {
+          "value": "kafka",
+          "label": "Apache Kafka (recommended for cloud-native)",
+          "recommended": true
+        },
+        {
+          "value": "artemis",
+          "label": "Apache ActiveMQ Artemis (JMS-compatible)",
+          "recommended": false
+        },
+        {
+          "value": "rabbitmq",
+          "label": "RabbitMQ",
+          "recommended": false
+        }
+      ],
+      "selected": "kafka",
+      "reasoning": "Kafka is the recommended messaging solution for cloud-native Quarkus applications. SmallRye Reactive Messaging provides excellent Kafka integration with reactive programming support. The current topic-based pattern (topic/orders) maps well to Kafka topics.",
+      "autonomous": true
+    },
+    "persistence_approach": {
+      "question": "Which persistence approach should be used?",
+      "options": [
+        {
+          "value": "hibernate-orm-panache",
+          "label": "Hibernate ORM with Panache (simplified repository pattern)",
+          "recommended": true
+        },
+        {
+          "value": "hibernate-orm",
+          "label": "Standard Hibernate ORM (traditional approach)",
+          "recommended": false
+        }
+      ],
+      "selected": "hibernate-orm-panache",
+      "reasoning": "Panache simplifies the repository pattern and reduces boilerplate code. It's the Quarkus-recommended approach and works seamlessly with existing JPA entities. Given the application has 5 entities and uses standard JPA patterns, Panache will modernize the data access layer efficiently.",
+      "autonomous": true
+    },
+    "build_mode": {
+      "question": "Should the application be built for JVM or native mode?",
+      "options": [
+        {
+          "value": "jvm",
+          "label": "JVM mode (traditional, faster build, easier debugging)",
+          "recommended": true
+        },
+        {
+          "value": "native",
+          "label": "Native mode (faster startup, lower memory, longer build)",
+          "recommended": false
+        },
+        {
+          "value": "both",
+          "label": "Support both modes",
+          "recommended": false
+        }
+      ],
+      "selected": "jvm",
+      "reasoning": "The application has a system-scoped custom audit library (audit-logging-library-1.0.0.jar) which may not be compatible with native compilation without modifications. JVM mode provides the safest migration path and allows for easier debugging and validation. Native mode can be evaluated after the initial migration is complete.",
+      "autonomous": true
+    },
+    "rest_framework": {
+      "question": "Which REST framework should be used?",
+      "options": [
+        {
+          "value": "resteasy-reactive",
+          "label": "RESTEasy Reactive (recommended, non-blocking)",
+          "recommended": true
+        },
+        {
+          "value": "resteasy-classic",
+          "label": "RESTEasy Classic (traditional JAX-RS)",
+          "recommended": false
+        }
+      ],
+      "selected": "resteasy-reactive",
+      "reasoning": "RESTEasy Reactive is the Quarkus-recommended approach for REST endpoints, offering better performance and non-blocking I/O. The existing JAX-RS endpoints are simple CRUD operations that will migrate cleanly to reactive patterns. This aligns with the reactive messaging approach for JMS migration.",
+      "autonomous": true
+    },
+    "testing_strategy": {
+      "question": "What testing approach should be included?",
+      "options": [
+        {
+          "value": "basic",
+          "label": "Basic JUnit 5 + REST Assured setup",
+          "recommended": true
+        },
+        {
+          "value": "comprehensive",
+          "label": "Comprehensive test suite with TestContainers",
+          "recommended": false
+        },
+        {
+          "value": "minimal",
+          "label": "Minimal (smoke tests only)",
+          "recommended": false
+        }
+      ],
+      "selected": "basic",
+      "reasoning": "The original project has tests disabled (maven.test.skip=true), indicating minimal existing test coverage. A basic testing foundation with JUnit 5 and REST Assured provides a good starting point for validation without over-engineering. TestContainers can be added later if needed.",
+      "autonomous": true
+    },
+    "custom_library_handling": {
+      "question": "How should the custom audit-logging-library be handled?",
+      "options": [
+        {
+          "value": "keep-system-scope",
+          "label": "Keep as system-scoped dependency (simplest)",
+          "recommended": true
+        },
+        {
+          "value": "install-local-maven",
+          "label": "Install to local Maven repository",
+          "recommended": false
+        },
+        {
+          "value": "convert-to-extension",
+          "label": "Convert to Quarkus extension",
+          "recommended": false
+        }
+      ],
+      "selected": "keep-system-scope",
+      "reasoning": "System-scoped dependencies work in Quarkus JVM mode. This is the least disruptive approach for the migration. The library appears to be a simple logging utility (based on package naming) and doesn't require conversion to a Quarkus extension at this stage.",
+      "autonomous": true
+    }
+  },
+  "migration_plan": {
+    "phases": [
+      {
+        "phase": 1,
+        "name": "Build Config",
+        "description": "Restructure pom.xml: WAR→JAR, add Quarkus BOM and plugin, replace Java EE dependencies with Quarkus extensions",
+        "estimated_complexity": "medium",
+        "key_tasks": [
+          "Change packaging from WAR to JAR",
+          "Update Java version to 17",
+          "Add Quarkus BOM (io.quarkus:quarkus-bom:3.x)",
+          "Add quarkus-maven-plugin",
+          "Replace javaee-api with Quarkus extensions",
+          "Add quarkus-hibernate-orm-panache",
+          "Add quarkus-jdbc-postgresql",
+          "Add quarkus-smallrye-reactive-messaging-kafka",
+          "Add quarkus-resteasy-reactive-jackson",
+          "Migrate Flyway dependency to quarkus-flyway",
+          "Handle custom audit library"
+        ]
+      },
+      {
+        "phase": 2,
+        "name": "App Config",
+        "description": "Replace persistence.xml with application.properties, remove web.xml and beans.xml",
+        "estimated_complexity": "low",
+        "key_tasks": [
+          "Create src/main/resources/application.properties",
+          "Migrate persistence.xml datasource config",
+          "Convert Hibernate properties to Quarkus config",
+          "Configure PostgreSQL datasource",
+          "Configure Kafka messaging",
+          "Configure Flyway migration",
+          "Remove web.xml (not needed in Quarkus)",
+          "Remove beans.xml (CDI auto-enabled)"
+        ]
+      },
+      {
+        "phase": 3,
+        "name": "EJB to CDI",
+        "description": "Replace EJB annotations with CDI, remove Remote/Local interfaces, replace JNDI lookups with injection",
+        "estimated_complexity": "high",
+        "key_tasks": [
+          "Replace @Stateless with @ApplicationScoped (5 classes)",
+          "Replace @Stateful with @SessionScoped or custom scope (1 class)",
+          "Remove @Remote annotation from ShippingService",
+          "Update ShippingServiceRemote interface or remove",
+          "Replace any JNDI lookups with @Inject",
+          "Update transaction management (EJB→CDI)",
+          "Verify bean lifecycle compatibility"
+        ]
+      },
+      {
+        "phase": 4,
+        "name": "Messaging",
+        "description": "Convert MDB classes to SmallRye Reactive Messaging, replace JMS producers with Emitter",
+        "estimated_complexity": "high",
+        "key_tasks": [
+          "Convert OrderServiceMDB to @Incoming method",
+          "Refactor InventoryNotificationMDB (remove WebLogic JNDI)",
+          "Replace MessageListener with reactive messaging",
+          "Remove manual JMS setup code",
+          "Configure Kafka topic mapping (topic/orders → kafka topic)",
+          "Add @Channel and Emitter for message production",
+          "Update message serialization/deserialization"
+        ]
+      },
+      {
+        "phase": 5,
+        "name": "Lifecycle",
+        "description": "Replace server-specific lifecycle listeners with Quarkus startup/shutdown events",
+        "estimated_complexity": "low",
+        "key_tasks": [
+          "Replace StartupListener with Quarkus lifecycle events",
+          "Remove weblogic.application imports",
+          "Use @Observes StartupEvent and ShutdownEvent",
+          "Migrate DataBaseMigrationStartup if needed",
+          "Remove ApplicationLifecycleListener inheritance"
+        ]
+      },
+      {
+        "phase": 6,
+        "name": "Cleanup",
+        "description": "Delete legacy files, remove weblogic/jboss stubs, verify no javax.* EE imports remain",
+        "estimated_complexity": "low",
+        "key_tasks": [
+          "Delete persistence.xml",
+          "Delete web.xml",
+          "Delete beans.xml",
+          "Remove weblogic package stubs",
+          "Verify all javax.* imports converted to jakarta.*",
+          "Remove unused dependencies",
+          "Clean up legacy configuration",
+          "Final build validation"
+        ]
+      }
+    ],
+    "estimated_duration": "2-3 days",
+    "risk_assessment": {
+      "overall_risk": "medium",
+      "risk_factors": [
+        {
+          "factor": "Custom system-scoped library",
+          "severity": "medium",
+          "mitigation": "Keep as system-scoped; validate compatibility in JVM mode"
+        },
+        {
+          "factor": "WebLogic-specific code",
+          "severity": "medium",
+          "mitigation": "Replace JNDI lookups and lifecycle hooks with Quarkus equivalents"
+        },
+        {
+          "factor": "JMS to Kafka migration",
+          "severity": "high",
+          "mitigation": "Topic-based pattern maps well; ensure message format compatibility"
+        },
+        {
+          "factor": "Stateful session bean",
+          "severity": "medium",
+          "mitigation": "ShoppingCartService needs careful scope management in CDI"
+        }
+      ]
+    }
+  },
+  "recommendations": [
+    "Start with Phase 1 (Build Config) to establish the Quarkus foundation",
+    "Test compilation after each phase before proceeding",
+    "Pay special attention to ShoppingCartService (@Stateful) - may need session management strategy",
+    "Validate message format compatibility when migrating from JMS to Kafka",
+    "Consider creating integration tests with TestContainers after initial migration",
+    "Review custom audit library for Quarkus compatibility early in the process",
+    "Keep the WebLogic stub packages initially to minimize disruption, remove in cleanup phase"
+  ]
+}
