@@ -10,7 +10,6 @@ import com.redhat.coolstore.model.ShoppingCart;
 @ApplicationScoped
 public class ShippingService {
 
-    @Override
     public double calculateShipping(ShoppingCart sc) {
 
         if (sc != null) {
@@ -43,7 +42,6 @@ public class ShippingService {
 
     }
 
-    @Override
     public double calculateShippingInsurance(ShoppingCart sc) {
 
         if (sc != null) {
