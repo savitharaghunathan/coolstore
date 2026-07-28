@@ -3,14 +3,12 @@ package com.redhat.coolstore.service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import javax.ejb.Remote;
-import javax.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import com.redhat.coolstore.model.ShoppingCart;
 
-@Stateless
-@Remote
-public class ShippingService implements ShippingServiceRemote {
+@ApplicationScoped
+public class ShippingService {
 
     @Override
     public double calculateShipping(ShoppingCart sc) {
