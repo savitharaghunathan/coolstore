@@ -25,6 +25,9 @@ public class ShoppingCartService  {
     @Inject
     ShoppingCartOrderProcessor shoppingCartOrderProcessor;
 
+    @Inject
+    ShippingService shippingService;
+
     private ShoppingCart cart  = new ShoppingCart(); //Each user can have multiple shopping carts (tabbed browsing)
 
    
@@ -65,11 +68,11 @@ public class ShoppingCartService  {
 
                 }
 
-                sc.setShippingTotal(lookupShippingServiceRemote().calculateShipping(sc));
+                sc.setShippingTotal(shippingService.calculateShipping(sc));
 
                 if (sc.getCartItemTotal() >= 25) {
                     sc.setShippingTotal(sc.getShippingTotal()
-                            + lookupShippingServiceRemote().calculateShippingInsurance(sc));
+                            + shippingService.calculateShippingInsurance(sc));
                 }
 
             }
@@ -105,18 +108,5 @@ public class ShoppingCartService  {
 
     public Product getProduct(String itemId) {
         return productServices.getProductByItemId(itemId);
-    }
-
-	private static ShippingServiceRemote lookupShippingServiceRemote() {
-        try {
-            final Hashtable<String, String> jndiProperties = new Hashtable<>();
-            jndiProperties.put(Context.INITIAL_CONTEXT_FACTORY, "org.wildfly.naming.client.WildFlyInitialContextFactory");
-
-            final Context context = new InitialContext(jndiProperties);
-
-            return (ShippingServiceRemote) context.lookup("ejb:/ROOT/ShippingService!" + ShippingServiceRemote.class.getName());
-        } catch (NamingException e) {
-            throw new RuntimeException(e);
-        }
     }
 }
