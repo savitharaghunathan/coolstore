@@ -1,19 +1,15 @@
 package com.redhat.coolstore.service;
 
-import java.util.Hashtable;
 import java.util.logging.Logger;
 
-import javax.ejb.Stateful;
-import javax.inject.Inject;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
+import jakarta.inject.Inject;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
 
-@Stateful
+@ApplicationScoped
 public class ShoppingCartService  {
 
     @Inject
