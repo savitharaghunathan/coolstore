@@ -1,5 +1,130 @@
 # CoolStore Monolith
 
+This repository contains the CoolStore monolith application, now migrated to Quarkus 3.
+
+## Quarkus Migration (Current)
+
+This application has been migrated from Java EE 7 to Quarkus 3. The following instructions describe how to run the Quarkus version.
+
+### Prerequisites
+
+* Java 17 or higher
+* Maven 3.8.5 or higher
+* PostgreSQL database
+* AMQP broker (Apache Artemis or RabbitMQ)
+
+### Running the Application
+
+#### Development Mode (with hot reload)
+
+```bash
+mvn quarkus:dev
+```
+
+The application will start on http://localhost:8080
+
+#### Building the Application
+
+```bash
+mvn clean package
+```
+
+The packaged application will be available in `target/quarkus-app/`
+
+#### Running the Packaged Application
+
+```bash
+java -jar target/quarkus-app/quarkus-run.jar
+```
+
+#### Building a Native Executable
+
+```bash
+mvn clean package -Pnative
+```
+
+Then run with:
+
+```bash
+./target/ROOT-1.0.0-SNAPSHOT-runner
+```
+
+### Configuration
+
+The application is configured via `src/main/resources/application.properties`. Key settings include:
+
+**Database Configuration:**
+```properties
+quarkus.datasource.db-kind=postgresql
+quarkus.datasource.username=coolstore
+quarkus.datasource.password=coolstore
+quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/coolstoredb
+```
+
+**Messaging Configuration:**
+```properties
+mp.messaging.incoming.orders.connector=smallrye-amqp
+mp.messaging.incoming.orders.address=orders
+mp.messaging.outgoing.orders-out.connector=smallrye-amqp
+mp.messaging.outgoing.orders-out.address=orders
+```
+
+### Required Services
+
+#### Start PostgreSQL
+
+```bash
+podman run --name coolstore-postgres \
+   -p 5432:5432 \
+   -e POSTGRES_USER=coolstore \
+   -e POSTGRES_PASSWORD=coolstore \
+   -e POSTGRES_DB=coolstoredb \
+   -d postgres
+```
+
+#### Start Apache Artemis (AMQP Broker)
+
+```bash
+podman run --name artemis \
+   -p 5672:5672 \
+   -p 8161:8161 \
+   -e AMQ_USER=admin \
+   -e AMQ_PASSWORD=admin \
+   -d quay.io/artemiscloud/activemq-artemis-broker
+```
+
+### Accessing the Application
+
+* Application: http://localhost:8080
+* REST API: http://localhost:8080/services
+* Health Check: http://localhost:8080/q/health
+
+### API Endpoints
+
+* `GET /services/products` - List all products
+* `GET /services/products/{itemId}` - Get product by ID
+* `GET /services/cart/{cartId}` - Get shopping cart
+* `POST /services/cart/{cartId}/{itemId}/{quantity}` - Add item to cart
+* `POST /services/cart/checkout/{cartId}` - Checkout cart
+* `GET /services/orders` - List all orders
+* `GET /services/orders/{orderId}` - Get order by ID
+
+### Migration Notes
+
+This application was migrated from Java EE 7/WebLogic to Quarkus 3 with the following major changes:
+
+* **Packaging:** WAR → JAR
+* **EJB → CDI:** All `@Stateless`, `@Stateful` beans converted to `@ApplicationScoped`
+* **JMS → Reactive Messaging:** MDBs converted to `@Incoming` methods using SmallRye Reactive Messaging
+* **JNDI Removed:** Direct CDI injection replaces all JNDI lookups
+* **Namespace:** `javax.*` → `jakarta.*` for Jakarta EE APIs
+* **Lifecycle:** WebLogic lifecycle listeners → Quarkus `StartupEvent`/`ShutdownEvent`
+* **Configuration:** `persistence.xml` + server config → `application.properties`
+
+---
+
+## Legacy Java EE 7 Deployment (Deprecated)
+
 This repository has the complete coolstore monolith built as a Java EE 7 application. To deploy it on JBoss 7.4 follow the instructions below
 
 

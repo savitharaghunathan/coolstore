@@ -1,6 +1,9 @@
-target
+target/
+.quarkus/
+quarkus.log
 
 .classpath
 .idea
 .settings
 .vscode
+graphify-out/

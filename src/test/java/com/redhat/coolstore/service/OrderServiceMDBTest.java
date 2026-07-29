@@ -1,17 +1,14 @@
 package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.Order;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
-
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class OrderServiceMDBTest {
@@ -25,7 +22,7 @@ public class OrderServiceMDBTest {
     @InjectMocks
     private OrderServiceMDB orderServiceMDB;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
@@ -42,11 +39,10 @@ public class OrderServiceMDBTest {
     }
 
     @Test
-    public void testOnMessageDeserializesAndSavesOrder() throws JMSException {
-        TextMessage msg = mock(TextMessage.class);
-        when(msg.getBody(String.class)).thenReturn(buildOrderJson());
+    public void testProcessOrderDeserializesAndSavesOrder() {
+        String orderJson = buildOrderJson();
 
-        orderServiceMDB.onMessage(msg);
+        orderServiceMDB.processOrder(orderJson);
 
         ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
         verify(orderService).save(orderCaptor.capture());
@@ -58,17 +54,16 @@ public class OrderServiceMDBTest {
     }
 
     @Test
-    public void testOnMessageUpdatesInventory() throws JMSException {
-        TextMessage msg = mock(TextMessage.class);
-        when(msg.getBody(String.class)).thenReturn(buildOrderJson());
+    public void testProcessOrderUpdatesInventory() {
+        String orderJson = buildOrderJson();
 
-        orderServiceMDB.onMessage(msg);
+        orderServiceMDB.processOrder(orderJson);
 
         verify(catalogService).updateInventoryItems("329299", 1);
     }
 
     @Test
-    public void testOnMessageWithMultipleItems() throws JMSException {
+    public void testProcessOrderWithMultipleItems() {
         String json = "{\"orderValue\":60.0," +
                       "\"customerName\":\"Multi\"," +
                       "\"customerEmail\":\"multi@example.com\"," +
@@ -81,10 +76,7 @@ public class OrderServiceMDBTest {
                       "{\"productSku\":\"165613\",\"quantity\":2}" +
                       "]}";
 
-        TextMessage msg = mock(TextMessage.class);
-        when(msg.getBody(String.class)).thenReturn(json);
-
-        orderServiceMDB.onMessage(msg);
+        orderServiceMDB.processOrder(json);
 
         verify(catalogService).updateInventoryItems("329299", 1);
         verify(catalogService).updateInventoryItems("165613", 2);

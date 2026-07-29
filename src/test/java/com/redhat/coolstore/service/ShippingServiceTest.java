@@ -1,16 +1,16 @@
 package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.ShoppingCart;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ShippingServiceTest {
 
     private ShippingService shippingService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         shippingService = new ShippingService();
     }
