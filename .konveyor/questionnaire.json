@@ -1,0 +1,468 @@
+{
+  "questionnaire": {
+    "timestamp": "2026-07-29T19:45:00Z",
+    "migration_type": "java-ee-to-quarkus-3",
+    "interactive_mode": false,
+    "detection": {
+      "summary": "Java EE 7 monolith application running on WebLogic with WAR packaging",
+      "language": {
+        "name": "Java",
+        "current_version": "8",
+        "target_version": "17",
+        "reasoning": "Quarkus 3 requires Java 17 minimum. Choosing Java 17 LTS for stability and conservative migration approach."
+      },
+      "build_tool": {
+        "name": "Maven",
+        "version": "3.x"
+      },
+      "current_runtime": {
+        "type": "application_server",
+        "name": "WebLogic",
+        "evidence": [
+          "weblogic.application.ApplicationLifecycleListener",
+          "weblogic.jndi.WLInitialContextFactory",
+          "JNDI provider URL: t3://localhost:7001"
+        ]
+      },
+      "packaging": {
+        "current": "war",
+        "target": "jar",
+        "target_type": "fast-jar",
+        "reasoning": "Fast-jar is Quarkus default, optimized for container deployment with faster startup than uber-jar"
+      },
+      "java_ee_version": "7.0",
+      "frameworks": {
+        "jpa": {
+          "enabled": true,
+          "provider": "Hibernate",
+          "version": "5.1.17.Final",
+          "config_file": "src/main/resources/META-INF/persistence.xml",
+          "datasource_jndi": "java:jboss/datasources/CoolstoreDS"
+        },
+        "cdi": {
+          "enabled": true,
+          "version": "1.1",
+          "config_file": "src/main/webapp/WEB-INF/beans.xml",
+          "bean_discovery_mode": "all"
+        },
+        "ejb": {
+          "enabled": true,
+          "stateless_count": 5,
+          "stateful_count": 1,
+          "singleton_count": 1,
+          "message_driven_count": 2,
+          "remote_interfaces": 1,
+          "components": [
+            "CatalogService (@Stateless)",
+            "OrderService (@Stateless)",
+            "ProductService (@Stateless)",
+            "ShippingService (@Stateless, @Remote)",
+            "ShoppingCartOrderProcessor (@Stateless)",
+            "ShoppingCartService (@Stateful)",
+            "DataBaseMigrationStartup (@Singleton)",
+            "OrderServiceMDB (@MessageDriven)",
+            "InventoryNotificationMDB (MessageListener, manual setup)"
+          ]
+        },
+        "jax_rs": {
+          "enabled": true,
+          "application_path": "/services",
+          "endpoints": [
+            "CartEndpoint",
+            "OrderEndpoint", 
+            "ProductEndpoint"
+          ]
+        },
+        "jms": {
+          "enabled": true,
+          "message_driven_beans": 2,
+          "topics": [
+            "topic/orders"
+          ],
+          "manual_jndi_setup": true,
+          "weblogic_specific": true
+        },
+        "jaxb": {
+          "enabled": true,
+          "usage": "Model annotations (@XmlRootElement)"
+        }
+      },
+      "dependencies": {
+        "database_migration": {
+          "tool": "Flyway",
+          "version": "4.1.2",
+          "migration_files": [
+            "src/main/resources/db/migration/V1_1__CreateSchema.sql",
+            "src/main/resources/db/migration/V1_2__AddInitialData.sql"
+          ]
+        },
+        "custom_libraries": [
+          {
+            "groupId": "com.enterprise",
+            "artifactId": "audit-logging-library",
+            "version": "1.0.0",
+            "scope": "system",
+            "path": "lib/audit-logging-library-1.0.0.jar",
+            "issue": "System-scoped dependencies not recommended for Quarkus"
+          }
+        ]
+      },
+      "source_files": {
+        "total_java_files": 30,
+        "entities": 8,
+        "services": 7,
+        "rest_endpoints": 3,
+        "utilities": 4,
+        "weblogic_specific": 4
+      },
+      "application_server_specifics": {
+        "lifecycle_listeners": [
+          "weblogic.application.ApplicationLifecycleListener (StartupListener)"
+        ],
+        "jndi_lookups": [
+          "java:jboss/datasources/CoolstoreDS (datasource)",
+          "TCF (JMS TopicConnectionFactory)",
+          "topic/orders (JMS Topic)"
+        ],
+        "remote_ejb": true
+      }
+    },
+    "decisions": [
+      {
+        "id": "java_version",
+        "question": "Which Java LTS version should be the migration target?",
+        "category": "platform",
+        "options": [
+          {
+            "id": "java17",
+            "label": "Java 17 (LTS)",
+            "description": "Minimum requirement for Quarkus 3, well-tested, conservative"
+          },
+          {
+            "id": "java21",
+            "label": "Java 21 (LTS)",
+            "description": "Latest LTS with newest features, longer support timeline"
+          }
+        ],
+        "selected": "java17",
+        "reasoning": "Java 17 is the minimum requirement and most conservative choice. The codebase doesn't require Java 21 features, and Java 17 minimizes migration risk while providing all necessary Quarkus 3 support.",
+        "impact": "high",
+        "affects": ["build_config", "compiler_settings", "runtime"]
+      },
+      {
+        "id": "messaging_backend",
+        "question": "Which messaging backend should replace JMS?",
+        "category": "messaging",
+        "options": [
+          {
+            "id": "kafka",
+            "label": "Apache Kafka with SmallRye Reactive Messaging",
+            "description": "Production-grade, scalable, event streaming platform"
+          },
+          {
+            "id": "amqp_artemis",
+            "label": "AMQP (ActiveMQ Artemis) with SmallRye Reactive Messaging",
+            "description": "JMS-like semantics, easier migration from JMS Topics"
+          },
+          {
+            "id": "in_memory",
+            "label": "In-memory channels",
+            "description": "Simple, no external dependencies, development/testing only"
+          }
+        ],
+        "selected": "amqp_artemis",
+        "reasoning": "AMQP with ActiveMQ Artemis provides the closest semantics to JMS Topics used in the application. It's the Red Hat/JBoss recommended broker and simplifies migration from the existing JMS pub/sub pattern. Kafka would require more architectural changes.",
+        "impact": "high",
+        "affects": ["messaging_module", "mdb_conversion", "infrastructure"],
+        "configuration_needed": {
+          "broker_url": "Required: ActiveMQ Artemis connection URL",
+          "topic_mapping": "topic/orders → AMQP exchange/queue configuration"
+        }
+      },
+      {
+        "id": "database_migration_tool",
+        "question": "How should database migrations be handled?",
+        "category": "persistence",
+        "options": [
+          {
+            "id": "keep_flyway",
+            "label": "Keep existing Flyway with manual configuration",
+            "description": "Minimal changes, continue using existing SQL migrations"
+          },
+          {
+            "id": "quarkus_flyway",
+            "label": "Use Quarkus Flyway extension",
+            "description": "Better integration, automatic migration, native support"
+          },
+          {
+            "id": "liquibase",
+            "label": "Migrate to Liquibase",
+            "description": "Different tool, requires rewriting migrations"
+          }
+        ],
+        "selected": "quarkus_flyway",
+        "reasoning": "Quarkus Flyway extension reuses existing SQL migration files while providing seamless Quarkus integration, automatic execution on startup, and native compilation support. No migration file changes needed.",
+        "impact": "medium",
+        "affects": ["app_config", "build_config"],
+        "migration_files_reusable": true
+      },
+      {
+        "id": "remote_ejb_strategy",
+        "question": "How should the @Remote EJB (ShippingService) be handled?",
+        "category": "architecture",
+        "options": [
+          {
+            "id": "rest_endpoint",
+            "label": "Convert to REST endpoint",
+            "description": "HTTP-based, widely compatible, uses existing REST infrastructure"
+          },
+          {
+            "id": "grpc",
+            "label": "Use Quarkus gRPC",
+            "description": "Efficient binary protocol, typed interfaces, more setup required"
+          },
+          {
+            "id": "local_only",
+            "label": "Make local-only (remove remote capability)",
+            "description": "Simplest if no remote consumers exist"
+          }
+        ],
+        "selected": "rest_endpoint",
+        "reasoning": "REST endpoint maintains remote access capability using standard HTTP protocols. The application already has REST infrastructure in place. This provides maximum flexibility and compatibility without requiring new protocols like gRPC.",
+        "impact": "medium",
+        "affects": ["ejb_to_cdi_module", "rest_endpoints"],
+        "new_endpoint": "/services/shipping"
+      },
+      {
+        "id": "session_management",
+        "question": "How should session state be managed (CartEndpoint is @SessionScoped, ShoppingCartService is @Stateful)?",
+        "category": "state_management",
+        "options": [
+          {
+            "id": "session_scoped_beans",
+            "label": "Keep Quarkus session-scoped beans",
+            "description": "Easiest migration, requires sticky sessions in production"
+          },
+          {
+            "id": "stateless_jwt",
+            "label": "Stateless with JWT tokens",
+            "description": "Cloud-native, scalable, requires frontend changes"
+          },
+          {
+            "id": "external_session",
+            "label": "Redis/database session store",
+            "description": "Scalable, shared sessions, adds external dependency"
+          }
+        ],
+        "selected": "session_scoped_beans",
+        "reasoning": "To minimize initial migration scope, preserve session-scoped beans to maintain existing behavior. This avoids frontend changes. For production cloud deployment, document JWT-based stateless authentication as a future enhancement. Provides clear migration path without blocking Quarkus migration.",
+        "impact": "medium",
+        "affects": ["app_config", "ejb_to_cdi_module"],
+        "future_recommendation": "Migrate to JWT-based stateless authentication for cloud-native scalability",
+        "production_consideration": "Requires sticky sessions or session replication"
+      },
+      {
+        "id": "lifecycle_events",
+        "question": "How should WebLogic ApplicationLifecycleListener be replaced?",
+        "category": "lifecycle",
+        "options": [
+          {
+            "id": "quarkus_events",
+            "label": "Quarkus lifecycle events (@Observes StartupEvent/ShutdownEvent)",
+            "description": "Quarkus-native, clean, simple"
+          },
+          {
+            "id": "cdi_lifecycle",
+            "label": "CDI lifecycle events (@Observes @Initialized)",
+            "description": "Portable CDI-standard approach"
+          },
+          {
+            "id": "remove",
+            "label": "Remove if not essential",
+            "description": "Current listener only logs, may not be needed"
+          }
+        ],
+        "selected": "quarkus_events",
+        "reasoning": "Quarkus lifecycle events are the idiomatic approach with clear semantics. The current listener only performs logging, making this a straightforward conversion. Easy to implement and test.",
+        "impact": "low",
+        "affects": ["lifecycle_module"],
+        "current_functionality": "Logging only (postStart, preStop)"
+      },
+      {
+        "id": "packaging_format",
+        "question": "What packaging format should be used for deployment?",
+        "category": "deployment",
+        "options": [
+          {
+            "id": "fast_jar",
+            "label": "Fast-jar (Quarkus default)",
+            "description": "Optimized startup, smaller size, multiple files"
+          },
+          {
+            "id": "uber_jar",
+            "label": "Uber-jar",
+            "description": "Single JAR file, traditional, larger size"
+          },
+          {
+            "id": "native",
+            "label": "Native executable",
+            "description": "Fastest startup, smallest memory, long build times"
+          }
+        ],
+        "selected": "fast_jar",
+        "reasoning": "Fast-jar is the Quarkus default and recommended for containerized deployments. It provides the best balance of startup time and deployment size. Native compilation can be evaluated later if extreme startup speed is needed.",
+        "impact": "low",
+        "affects": ["build_config", "deployment"],
+        "deployment_target": "Container (Docker/Kubernetes recommended)"
+      },
+      {
+        "id": "audit_library",
+        "question": "How should the system-scoped audit-logging-library be handled?",
+        "category": "dependencies",
+        "options": [
+          {
+            "id": "local_maven_install",
+            "label": "Install to local Maven repository",
+            "description": "Proper Maven dependency management, better portability"
+          },
+          {
+            "id": "maven_dependency",
+            "label": "Use Maven Central or corporate repository",
+            "description": "Cleanest approach if artifact is available"
+          },
+          {
+            "id": "inline_code",
+            "label": "Examine and potentially inline",
+            "description": "Most control, only if library is simple"
+          }
+        ],
+        "selected": "local_maven_install",
+        "reasoning": "System-scoped dependencies don't work well with Quarkus. Installing the JAR to the local Maven repository maintains the dependency while improving build portability. Without access to a corporate Maven repository, this is the safest intermediate step.",
+        "impact": "low",
+        "affects": ["build_config"],
+        "action_required": "mvn install:install-file -Dfile=lib/audit-logging-library-1.0.0.jar -DgroupId=com.enterprise -DartifactId=audit-logging-library -Dversion=1.0.0 -Dpackaging=jar"
+      }
+    ],
+    "migration_plan": {
+      "approach": "phased_migration",
+      "phases": [
+        {
+          "id": 1,
+          "name": "Build Config",
+          "description": "Restructure pom.xml: WAR→JAR, add Quarkus BOM and plugin, replace Java EE dependencies with Quarkus extensions",
+          "estimated_complexity": "medium",
+          "build_gate": true
+        },
+        {
+          "id": 2,
+          "name": "App Config",
+          "description": "Replace persistence.xml with application.properties, remove web.xml and beans.xml",
+          "estimated_complexity": "low",
+          "build_gate": true
+        },
+        {
+          "id": 3,
+          "name": "EJB to CDI",
+          "description": "Replace EJB annotations with CDI, remove Remote/Local interfaces, replace JNDI lookups with injection",
+          "estimated_complexity": "high",
+          "build_gate": true
+        },
+        {
+          "id": 4,
+          "name": "Messaging",
+          "description": "Convert MDB classes to SmallRye Reactive Messaging, replace JMS producers with Emitter",
+          "estimated_complexity": "high",
+          "build_gate": true
+        },
+        {
+          "id": 5,
+          "name": "Lifecycle",
+          "description": "Replace server-specific lifecycle listeners with Quarkus startup/shutdown events",
+          "estimated_complexity": "low",
+          "build_gate": true
+        },
+        {
+          "id": 6,
+          "name": "Cleanup",
+          "description": "Delete legacy files, remove weblogic/jboss stubs, verify no javax.* EE imports remain",
+          "estimated_complexity": "low",
+          "build_gate": true
+        }
+      ],
+      "prerequisites": [
+        "Ensure Java 17 JDK is installed",
+        "Install audit-logging-library to local Maven repository",
+        "Set up ActiveMQ Artemis broker for testing",
+        "Verify current application builds successfully on Java EE"
+      ],
+      "risks": [
+        {
+          "description": "Session state migration may affect user experience if sticky sessions not configured",
+          "mitigation": "Test session behavior thoroughly, configure load balancer for sticky sessions",
+          "severity": "medium"
+        },
+        {
+          "description": "JMS to AMQP migration may have message format incompatibilities",
+          "mitigation": "Create integration tests for message flow, verify Order serialization/deserialization",
+          "severity": "medium"
+        },
+        {
+          "description": "WebLogic-specific JNDI lookups need complete replacement",
+          "mitigation": "Map all JNDI names to Quarkus configuration, test all injection points",
+          "severity": "low"
+        },
+        {
+          "description": "Remote EJB clients may exist outside the codebase",
+          "mitigation": "Document REST endpoint as replacement, provide migration guide for clients",
+          "severity": "low"
+        }
+      ]
+    },
+    "quarkus_extensions_required": [
+      "quarkus-hibernate-orm",
+      "quarkus-jdbc-postgresql",
+      "quarkus-flyway",
+      "quarkus-resteasy-reactive-jackson",
+      "quarkus-smallrye-reactive-messaging-amqp",
+      "quarkus-arc",
+      "quarkus-undertow",
+      "quarkus-scheduler",
+      "quarkus-logging-json"
+    ],
+    "configuration_mapping": {
+      "datasource": {
+        "from": "java:jboss/datasources/CoolstoreDS (JNDI)",
+        "to": "quarkus.datasource.* (application.properties)",
+        "notes": "Database type needs to be determined (defaulting to PostgreSQL based on common JBoss setup)"
+      },
+      "jms_topic": {
+        "from": "topic/orders (JMS Topic)",
+        "to": "mp.messaging.incoming/outgoing channels (AMQP)",
+        "notes": "Configure AMQP connector for ActiveMQ Artemis"
+      },
+      "persistence_unit": {
+        "from": "persistence.xml with unit name 'primary'",
+        "to": "quarkus.hibernate-orm.* properties",
+        "notes": "Hibernate properties migrate to application.properties"
+      }
+    },
+    "validation": {
+      "success_criteria": [
+        "Application builds successfully with 'mvn clean package'",
+        "All tests pass",
+        "REST endpoints respond correctly",
+        "Messages are published and consumed via AMQP",
+        "Database migrations execute on startup",
+        "No javax.* EE imports remain in codebase",
+        "Application starts in under 5 seconds (fast-jar)"
+      ],
+      "test_strategy": [
+        "Run existing unit tests with Quarkus Test framework",
+        "Create integration tests for REST endpoints",
+        "Test message flow end-to-end",
+        "Verify database schema and data migrations",
+        "Test session behavior across requests"
+      ]
+    }
+  }
+}
