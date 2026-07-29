@@ -10,7 +10,6 @@ import com.redhat.coolstore.model.ShoppingCart;
 @ApplicationScoped
 public class ShippingService {
 
-    public
     public double calculateShipping(ShoppingCart sc) {
 
         if (sc != null) {
