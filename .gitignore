@@ -1,4 +1,6 @@
-target
+target/
+.quarkus/
+quarkus.log
 
 .classpath
 .idea
