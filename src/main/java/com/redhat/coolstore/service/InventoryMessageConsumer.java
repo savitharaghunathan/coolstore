@@ -8,7 +8,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 @ApplicationScoped
-public class InventoryNotificationMDB {
+public class InventoryMessageConsumer {
 
     private static final int LOW_THRESHOLD = 50;
 
