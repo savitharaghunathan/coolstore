@@ -8,7 +8,7 @@ import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.utils.Transformers;
 
 @ApplicationScoped
-public class OrderServiceMDB {
+public class OrderMessageConsumer {
 
 	@Inject
 	OrderService orderService;
