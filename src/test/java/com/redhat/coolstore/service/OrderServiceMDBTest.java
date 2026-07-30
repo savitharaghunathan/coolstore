@@ -8,8 +8,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.jms.JMSException;
-import javax.jms.TextMessage;
+import jakarta.jms.JMSException;
+import jakarta.jms.TextMessage;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -43,10 +43,9 @@ public class OrderServiceMDBTest {
 
     @Test
     public void testOnMessageDeserializesAndSavesOrder() throws JMSException {
-        TextMessage msg = mock(TextMessage.class);
-        when(msg.getBody(String.class)).thenReturn(buildOrderJson());
+        String orderJson = buildOrderJson();
 
-        orderServiceMDB.onMessage(msg);
+        orderServiceMDB.onMessage(orderJson);
 
         ArgumentCaptor<Order> orderCaptor = ArgumentCaptor.forClass(Order.class);
         verify(orderService).save(orderCaptor.capture());
@@ -59,10 +58,9 @@ public class OrderServiceMDBTest {
 
     @Test
     public void testOnMessageUpdatesInventory() throws JMSException {
-        TextMessage msg = mock(TextMessage.class);
-        when(msg.getBody(String.class)).thenReturn(buildOrderJson());
+        String orderJson = buildOrderJson();
 
-        orderServiceMDB.onMessage(msg);
+        orderServiceMDB.onMessage(orderJson);
 
         verify(catalogService).updateInventoryItems("329299", 1);
     }
@@ -81,10 +79,7 @@ public class OrderServiceMDBTest {
                       "{\"productSku\":\"165613\",\"quantity\":2}" +
                       "]}";
 
-        TextMessage msg = mock(TextMessage.class);
-        when(msg.getBody(String.class)).thenReturn(json);
-
-        orderServiceMDB.onMessage(msg);
+        orderServiceMDB.onMessage(json);
 
         verify(catalogService).updateInventoryItems("329299", 1);
         verify(catalogService).updateInventoryItems("165613", 2);
