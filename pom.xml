@@ -94,11 +94,11 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.0</version>
+                <version>3.11.0</version>
                 <configuration>
                     <encoding>${project.encoding}</encoding>
-                    <source>17</source>
-                    <target>17</target>
+                    <release>17</release>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
             <plugin>
