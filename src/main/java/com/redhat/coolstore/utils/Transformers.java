@@ -17,7 +17,7 @@ import jakarta.json.JsonReader;
 import jakarta.json.JsonWriter;
 
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Logger;
+import org.jboss.logging.Logger;
 
 /**
  * Created by tqvarnst on 2017-03-30.

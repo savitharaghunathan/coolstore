@@ -1,7 +1,7 @@
 package com.redhat.coolstore.service;
 
 import java.util.List;
-import java.util.logging.Logger;
+import org.jboss.logging.Logger;
 
 import jakarta.inject.Inject;
 

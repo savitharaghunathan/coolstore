@@ -2,7 +2,7 @@ package com.redhat.coolstore.utils;
 
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.InjectionPoint;
-import java.util.logging.Logger;
+import org.jboss.logging.Logger;
 
 
 public class Producers {
