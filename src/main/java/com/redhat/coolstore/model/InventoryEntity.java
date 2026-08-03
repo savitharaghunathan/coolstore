@@ -7,10 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
-@XmlRootElement
 @Table(name = "INVENTORY", uniqueConstraints = @UniqueConstraint(columnNames = "itemId"))
 public class InventoryEntity implements Serializable {
 
