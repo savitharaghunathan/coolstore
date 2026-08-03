@@ -1,6 +1,6 @@
 package com.redhat.coolstore.service;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.utils.Transformers;
