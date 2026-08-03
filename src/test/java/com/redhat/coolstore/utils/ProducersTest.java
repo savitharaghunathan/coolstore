@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import java.lang.reflect.Member;
-import java.util.logging.Logger;
+import org.jboss.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
