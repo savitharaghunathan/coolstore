@@ -10,9 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.jms.JMSContext;
-import javax.jms.JMSProducer;
-import javax.jms.Topic;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 import java.util.logging.Logger;
 
 import static org.junit.Assert.*;
@@ -21,13 +19,7 @@ import static org.mockito.Mockito.*;
 public class ShoppingCartOrderProcessorTest {
 
     @Mock
-    private JMSContext context;
-
-    @Mock
-    private Topic ordersTopic;
-
-    @Mock
-    private JMSProducer producer;
+    private Emitter<String> ordersEmitter;
 
     @Mock
     private Logger log;
@@ -38,11 +30,10 @@ public class ShoppingCartOrderProcessorTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        when(context.createProducer()).thenReturn(producer);
     }
 
     @Test
-    public void testProcessSendsMessageToTopic() {
+    public void testProcessSendsMessageToEmitter() {
         ShoppingCart cart = new ShoppingCart();
         cart.setCartTotal(50.0);
 
@@ -58,8 +49,7 @@ public class ShoppingCartOrderProcessorTest {
 
         processor.process(cart);
 
-        verify(context).createProducer();
-        verify(producer).send(eq(ordersTopic), anyString());
+        verify(ordersEmitter).send(anyString());
     }
 
     @Test
@@ -83,7 +73,7 @@ public class ShoppingCartOrderProcessorTest {
         processor.process(cart);
 
         ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
-        verify(producer).send(eq(ordersTopic), jsonCaptor.capture());
+        verify(ordersEmitter).send(jsonCaptor.capture());
 
         String json = jsonCaptor.getValue();
         assertTrue(json.contains("\"orderValue\""));
