@@ -4,7 +4,7 @@ import java.util.Hashtable;
 import java.util.logging.Logger;
 
 import javax.ejb.Stateful;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
