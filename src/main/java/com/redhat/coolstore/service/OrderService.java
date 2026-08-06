@@ -1,4 +1,6 @@
 package com.redhat.coolstore.service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import com.enterprise.audit.logging.config.AuditConfiguration;
 import com.enterprise.audit.logging.exception.AuditLoggingException;
@@ -10,14 +12,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.ejb.Stateless;
 import jakarta.inject.Inject;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-@Stateless
+@ApplicationScoped
 public class OrderService {
 
   @Inject

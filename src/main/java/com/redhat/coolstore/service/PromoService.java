@@ -1,4 +1,6 @@
 package com.redhat.coolstore.service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import java.io.Serializable;
 import java.util.HashMap;
