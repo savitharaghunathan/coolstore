@@ -9,7 +9,6 @@ import java.math.RoundingMode;
 import com.redhat.coolstore.model.ShoppingCart;
 
 @ApplicationScoped
-@Remote
 public class ShippingService implements ShippingServiceRemote {
 
     @Override
