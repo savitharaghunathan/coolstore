@@ -1,30 +1,28 @@
 package com.redhat.coolstore.service;
 
-import com.enterprise.audit.logging.config.AuditConfiguration;
-import com.enterprise.audit.logging.exception.AuditLoggingException;
-import com.enterprise.audit.logging.service.FileSystemAuditLogger;
 import com.redhat.coolstore.model.Order;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
-@Stateless
+@ApplicationScoped
 public class OrderService {
+
+  @Inject
+  Logger log;
 
   @Inject
   private EntityManager em;
 
   public void save(Order order) {
     em.persist(order);
+    log.info("Order saved: " + order.getOrderId());
   }
 
   public List<Order> getOrders() {
@@ -39,23 +37,7 @@ public class OrderService {
     return em.find(Order.class, id);
   }
 
-  private FileSystemAuditLogger auditLogger;
-
-  @PostConstruct
-  public void init() throws AuditLoggingException {
-    // Initialize audit logger
-    AuditConfiguration config = new AuditConfiguration();
-    config.setLogDirectory("./device-inventory-audit-logs");
-    config.setAutoCreateDirectory(true);
-    auditLogger = new FileSystemAuditLogger(config);
-
-  }
-
-  @PreDestroy
-  public void cleanup() throws AuditLoggingException {
-    if (auditLogger != null) {
-      auditLogger.close();
-    }
-  }
+  // TODO: Re-integrate audit logging library once compatible version is available
+  // The audit-logging-library needs to be updated to work with Quarkus
 
 }
