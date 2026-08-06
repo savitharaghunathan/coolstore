@@ -1,0 +1,345 @@
+{
+  "metadata": {
+    "timestamp": "2026-08-06T21:08:00Z",
+    "mode": "non-interactive",
+    "migration_target": "Quarkus 3"
+  },
+  "detection": {
+    "language": {
+      "name": "Java",
+      "version": "8"
+    },
+    "build_tool": {
+      "name": "Maven",
+      "version": "3.x"
+    },
+    "packaging": "war",
+    "source_files_count": 30,
+    "application_server": {
+      "name": "JBoss/WildFly",
+      "detected_from": "JNDI datasource naming pattern"
+    },
+    "frameworks": [
+      {
+        "name": "Java EE",
+        "version": "7",
+        "components": [
+          "javaee-web-api",
+          "javaee-api"
+        ]
+      },
+      {
+        "name": "JAX-RS",
+        "purpose": "REST endpoints",
+        "markers": [
+          "javax.ws.rs.*",
+          "@Path",
+          "@GET",
+          "@POST",
+          "@DELETE",
+          "@Produces",
+          "@Consumes"
+        ]
+      },
+      {
+        "name": "CDI",
+        "purpose": "Dependency injection and context management",
+        "markers": [
+          "WEB-INF/beans.xml",
+          "@Inject",
+          "@ApplicationScoped",
+          "@RequestScoped",
+          "@SessionScoped",
+          "@Dependent"
+        ]
+      },
+      {
+        "name": "JPA",
+        "purpose": "Object-relational mapping",
+        "markers": [
+          "META-INF/persistence.xml",
+          "@Entity",
+          "@Table",
+          "@Id",
+          "@GeneratedValue",
+          "@OneToMany",
+          "@Column"
+        ],
+        "provider": "Hibernate",
+        "version": "5.1.17.Final"
+      },
+      {
+        "name": "EJB",
+        "purpose": "Enterprise JavaBeans",
+        "markers": [
+          "@Stateless",
+          "@Stateful",
+          "@MessageDriven",
+          "@Remote",
+          "@PostConstruct",
+          "@PreDestroy"
+        ]
+      },
+      {
+        "name": "JMS",
+        "purpose": "Message-driven architecture",
+        "markers": [
+          "javax.jms.*",
+          "@MessageDriven",
+          "MessageListener",
+          "JMSContext",
+          "Topic"
+        ],
+        "api_version": "2.0"
+      },
+      {
+        "name": "JTA",
+        "purpose": "Transaction management",
+        "markers": [
+          "jta-data-source in persistence.xml"
+        ]
+      }
+    ],
+    "libraries": [
+      {
+        "name": "Flyway",
+        "version": "4.1.2",
+        "purpose": "Database migration"
+      },
+      {
+        "name": "audit-logging-library",
+        "version": "1.0.0",
+        "scope": "system",
+        "source": "local JAR file",
+        "path": "lib/audit-logging-library-1.0.0.jar"
+      }
+    ],
+    "configuration_files": [
+      "src/main/resources/META-INF/persistence.xml",
+      "src/main/webapp/WEB-INF/beans.xml",
+      "src/main/webapp/WEB-INF/web.xml",
+      "src/main/webapp/keycloak.json"
+    ],
+    "datasource": {
+      "jndi_name": "java:jboss/datasources/CoolstoreDS",
+      "type": "JTA",
+      "persistence_unit": "primary"
+    },
+    "application_type": "E-commerce monolith (Coolstore)",
+    "features": [
+      "Shopping cart management",
+      "Product catalog",
+      "Inventory tracking",
+      "Order processing",
+      "Audit logging",
+      "Keycloak integration for security"
+    ]
+  },
+  "decisions": [
+    {
+      "id": "database_configuration",
+      "question": "How should the JTA datasource be migrated to Quarkus?",
+      "options": [
+        "External JNDI datasource configuration",
+        "Embedded datasource with connection pooling",
+        "Configuration-based datasource in application.properties"
+      ],
+      "selected": "Configuration-based datasource in application.properties",
+      "reasoning": "Quarkus uses application.properties for datasource configuration rather than JTA datasources. This provides better cloud-native flexibility, easier configuration management, and aligns with Quarkus best practices. The JNDI name 'java:jboss/datasources/CoolstoreDS' will be replaced with Quarkus datasource properties.",
+      "impact": "HIGH",
+      "affected_files": [
+        "src/main/resources/META-INF/persistence.xml",
+        "application.properties (new)"
+      ]
+    },
+    {
+      "id": "jms_messaging_strategy",
+      "question": "How should JMS Message-Driven Beans be migrated?",
+      "options": [
+        "Migrate to Quarkus Reactive Messaging with Kafka",
+        "Keep JMS with Apache ActiveMQ Artemis extension",
+        "Remove messaging and implement synchronous processing"
+      ],
+      "selected": "Keep JMS with Apache ActiveMQ Artemis extension",
+      "reasoning": "The application uses JMS Message-Driven Beans (InventoryNotificationMDB, OrderServiceMDB) with Topics. Quarkus supports JMS through the Artemis extension (quarkus-artemis-jms), maintaining similar semantics while being Quarkus-native. This provides the smoothest migration path without requiring architectural changes.",
+      "impact": "HIGH",
+      "affected_files": [
+        "src/main/java/com/redhat/coolstore/service/InventoryNotificationMDB.java",
+        "src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java"
+      ],
+      "dependencies": [
+        "quarkus-artemis-jms"
+      ]
+    },
+    {
+      "id": "ejb_migration_strategy",
+      "question": "How should EJB components be migrated?",
+      "options": [
+        "Convert to CDI beans",
+        "Use Quarkus EJB compatibility layer",
+        "Keep as-is with Java EE compatibility"
+      ],
+      "selected": "Convert to CDI beans",
+      "reasoning": "Quarkus recommends CDI beans over EJBs for better performance and cloud-native design. The migration is straightforward: @Stateless → @ApplicationScoped, @Stateful → @SessionScoped (with caution), @MessageDriven → CDI + JMS listener. This eliminates heavyweight EJB container overhead.",
+      "impact": "MEDIUM",
+      "affected_files": [
+        "src/main/java/com/redhat/coolstore/service/*.java"
+      ],
+      "transformations": {
+        "@Stateless": "@ApplicationScoped",
+        "@Stateful": "@SessionScoped or custom scope",
+        "@MessageDriven": "CDI bean with @JMSListener or Reactive Messaging"
+      }
+    },
+    {
+      "id": "persistence_configuration",
+      "question": "How should JPA persistence be configured?",
+      "options": [
+        "Keep persistence.xml as-is",
+        "Migrate fully to application.properties",
+        "Hybrid approach with minimal persistence.xml"
+      ],
+      "selected": "Migrate fully to application.properties",
+      "reasoning": "Quarkus can use persistence.xml but recommends application.properties for better integration with Quarkus configuration system, support for profiles, and cloud-native configuration. Hibernate properties and datasource configuration will be moved to application.properties using quarkus.hibernate-orm.* and quarkus.datasource.* prefixes.",
+      "impact": "MEDIUM",
+      "affected_files": [
+        "src/main/resources/META-INF/persistence.xml",
+        "application.properties (new)"
+      ]
+    },
+    {
+      "id": "external_jar_handling",
+      "question": "How should the system-scoped audit-logging-library dependency be handled?",
+      "options": [
+        "Install to local Maven repository during build",
+        "Deploy to corporate artifact repository",
+        "Keep as system-scoped dependency",
+        "Bundle into application"
+      ],
+      "selected": "Install to local Maven repository during build",
+      "reasoning": "System-scoped dependencies can cause issues with Quarkus build process and native compilation. Installing the JAR to the local Maven repository (using maven-install-plugin or manual install) allows normal dependency resolution. For production, deploying to a corporate artifact repository (Nexus/Artifactory) would be ideal, but local installation is a practical first step.",
+      "impact": "MEDIUM",
+      "affected_files": [
+        "pom.xml"
+      ],
+      "notes": "Consider checking if version 2.0.0 in lib/ should be used instead of 1.0.0"
+    },
+    {
+      "id": "rest_application_config",
+      "question": "How should JAX-RS Application configuration be handled?",
+      "options": [
+        "Keep @ApplicationPath annotation",
+        "Use Quarkus auto-configuration with application.properties",
+        "Remove Application class entirely"
+      ],
+      "selected": "Use Quarkus auto-configuration with application.properties",
+      "reasoning": "Quarkus auto-discovers REST endpoints and doesn't require a JAX-RS Application class in most cases. The @ApplicationPath value can be configured via 'quarkus.resteasy.path' (or 'quarkus.rest.path' for Quarkus REST). This simplifies the codebase and aligns with Quarkus conventions.",
+      "impact": "LOW",
+      "affected_files": [
+        "src/main/java/com/redhat/coolstore/rest/RestApplication.java",
+        "application.properties (new)"
+      ]
+    },
+    {
+      "id": "build_packaging",
+      "question": "What packaging format should be used for Quarkus?",
+      "options": [
+        "Keep WAR packaging",
+        "Migrate to JAR (uber-jar)",
+        "Create native executable",
+        "JAR with native option"
+      ],
+      "selected": "Migrate to JAR (uber-jar)",
+      "reasoning": "Quarkus produces uber-JARs (fast-jar) by default, which are more cloud-native and containerization-friendly than WAR files. WAR packaging is possible but not recommended. Native compilation can be added later as an optimization using quarkus.package.type=native when performance requirements demand it.",
+      "impact": "HIGH",
+      "affected_files": [
+        "pom.xml"
+      ],
+      "packaging_change": "war → jar (fast-jar)"
+    },
+    {
+      "id": "java_version",
+      "question": "What Java version should be targeted?",
+      "options": [
+        "Keep Java 8",
+        "Upgrade to Java 11",
+        "Upgrade to Java 17",
+        "Upgrade to Java 21"
+      ],
+      "selected": "Upgrade to Java 17",
+      "reasoning": "Quarkus 3 requires Java 11 minimum and recommends Java 17 or 21. Java 17 is an LTS release with excellent Quarkus support, modern language features, and strong ecosystem support. It provides a good balance between stability and modernization.",
+      "impact": "MEDIUM",
+      "affected_files": [
+        "pom.xml"
+      ],
+      "java_version_change": "1.8 → 17"
+    },
+    {
+      "id": "flyway_migration",
+      "question": "How should Flyway database migrations be handled?",
+      "options": [
+        "Keep Flyway with Quarkus extension",
+        "Migrate to Liquibase",
+        "Remove database migration tool"
+      ],
+      "selected": "Keep Flyway with Quarkus extension",
+      "reasoning": "Quarkus has a native Flyway extension (quarkus-flyway). The existing Flyway migrations can be kept with minimal changes. Migration scripts will be discovered automatically from db/migration or the configured location.",
+      "impact": "LOW",
+      "affected_files": [
+        "pom.xml",
+        "src/main/resources/db/migration/*"
+      ],
+      "dependencies": [
+        "quarkus-flyway"
+      ]
+    },
+    {
+      "id": "keycloak_integration",
+      "question": "How should Keycloak security integration be migrated?",
+      "options": [
+        "Use Quarkus OIDC extension",
+        "Use Quarkus Keycloak Authorization extension",
+        "Keep existing Keycloak adapter"
+      ],
+      "selected": "Use Quarkus OIDC extension",
+      "reasoning": "Quarkus recommends using the OIDC extension (quarkus-oidc) for Keycloak integration rather than the legacy Keycloak adapters. The existing keycloak.json can be migrated to application.properties using quarkus.oidc.* properties. This provides better performance and cloud-native configuration.",
+      "impact": "MEDIUM",
+      "affected_files": [
+        "src/main/webapp/keycloak.json",
+        "application.properties (new)"
+      ],
+      "dependencies": [
+        "quarkus-oidc"
+      ]
+    }
+  ],
+  "migration_scope": {
+    "complexity": "MEDIUM-HIGH",
+    "estimated_effort": "The migration involves converting Java EE 7 APIs to Quarkus equivalents, particularly EJBs to CDI, JTA datasource to Quarkus config, and adapting messaging components. The codebase is relatively small (30 files) but uses multiple Java EE technologies.",
+    "risk_areas": [
+      "Message-Driven Beans with JMS Topics",
+      "System-scoped external JAR dependency",
+      "Stateful EJB session management",
+      "JTA transaction boundaries",
+      "Keycloak integration changes"
+    ],
+    "low_risk_areas": [
+      "JAX-RS REST endpoints (minimal changes needed)",
+      "JPA entities (mostly compatible)",
+      "CDI basic usage (already aligned)",
+      "Flyway migrations (direct extension available)"
+    ]
+  },
+  "next_steps": [
+    "Create Quarkus project structure with appropriate extensions",
+    "Migrate pom.xml to Quarkus dependencies and plugins",
+    "Create application.properties with all configurations",
+    "Convert EJBs to CDI beans",
+    "Migrate Message-Driven Beans to Quarkus JMS or Reactive Messaging",
+    "Update datasource and persistence configuration",
+    "Handle external JAR dependency properly",
+    "Migrate Keycloak configuration to OIDC",
+    "Update Java version to 17",
+    "Test and verify all functionality"
+  ]
+}
