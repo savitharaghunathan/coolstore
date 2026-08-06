@@ -49,7 +49,11 @@
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-artemis-jms</artifactId>
+            <artifactId>quarkus-pooled-jms</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-artemis-core</artifactId>
         </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
