@@ -5,11 +5,14 @@ import jakarta.inject.Inject;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
-import io.quarkiverse.artemis.jms.Incoming;
 
 import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.utils.Transformers;
 
+/**
+ * Message-Driven Bean for processing orders from JMS topic
+ * Note: Requires Artemis broker configuration in application.properties
+ */
 @ApplicationScoped
 public class OrderServiceMDB { 
 
@@ -19,7 +22,8 @@ public class OrderServiceMDB {
 	@Inject
 	CatalogService catalogService;
 
-	@Incoming("orders")
+	// TODO: Configure JMS consumer via application.properties
+	// quarkus.artemis.jms.consumers.orders.destination=orders
 	public void onMessage(Message rcvMessage) {
 		System.out.println("\nMessage recd !");
 		TextMessage msg = null;

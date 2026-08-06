@@ -8,8 +8,11 @@ import jakarta.inject.Inject;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
-import io.quarkiverse.artemis.jms.Incoming;
 
+/**
+ * Message-Driven Bean for inventory notifications
+ * Note: Requires Artemis broker configuration in application.properties
+ */
 @ApplicationScoped
 public class InventoryNotificationMDB {
 
@@ -18,7 +21,7 @@ public class InventoryNotificationMDB {
     @Inject
     private CatalogService catalogService;
 
-    @Incoming("orders")
+    // TODO: Configure JMS consumer via application.properties
     public void onMessage(Message rcvMessage) {
         TextMessage msg;
         try {
