@@ -5,7 +5,7 @@ import com.redhat.coolstore.utils.Transformers;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.jms.*;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 
 @ApplicationScoped
 public class InventoryNotificationMDB {
@@ -15,26 +15,18 @@ public class InventoryNotificationMDB {
     @Inject
     private CatalogService catalogService;
 
-    public void consumeOrderForInventory(Message rcvMessage) {
-        TextMessage msg;
-        try {
-            System.out.println("received message inventory");
-            if (rcvMessage instanceof TextMessage) {
-                msg = (TextMessage) rcvMessage;
-                String orderStr = msg.getBody(String.class);
-                Order order = Transformers.jsonToOrder(orderStr);
-                order.getItemList().forEach(orderItem -> {
-                    int old_quantity = catalogService.getCatalogItemById(orderItem.getProductId()).getInventory().getQuantity();
-                    int new_quantity = old_quantity - orderItem.getQuantity();
-                    if (new_quantity < LOW_THRESHOLD) {
-                        System.out.println("Inventory for item " + orderItem.getProductId() + " is below threshold (" + LOW_THRESHOLD + "), contact supplier!");
-                    } else {
-                        orderItem.setQuantity(new_quantity);
-                    }
-                });
+    @Incoming("orders")
+    public void consumeOrderForInventory(String orderStr) {
+        System.out.println("received message inventory");
+        Order order = Transformers.jsonToOrder(orderStr);
+        order.getItemList().forEach(orderItem -> {
+            int old_quantity = catalogService.getCatalogItemById(orderItem.getProductId()).getInventory().getQuantity();
+            int new_quantity = old_quantity - orderItem.getQuantity();
+            if (new_quantity < LOW_THRESHOLD) {
+                System.out.println("Inventory for item " + orderItem.getProductId() + " is below threshold (" + LOW_THRESHOLD + "), contact supplier!");
+            } else {
+                orderItem.setQuantity(new_quantity);
             }
-        } catch (JMSException jmse) {
-            System.err.println("An exception occurred: " + jmse.getMessage());
-        }
+        });
     }
 }
