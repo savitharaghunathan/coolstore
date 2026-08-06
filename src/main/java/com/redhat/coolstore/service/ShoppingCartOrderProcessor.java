@@ -3,11 +3,11 @@ package com.redhat.coolstore.service;
 import org.jboss.logging.Logger;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.jms.JMSContext;
-import jakarta.jms.Topic;
 
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.utils.Transformers;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 
 @ApplicationScoped
 public class ShoppingCartOrderProcessor  {
@@ -16,14 +16,12 @@ public class ShoppingCartOrderProcessor  {
     Logger log;
 
     @Inject
-    JMSContext context;
-
-    @Inject
-    Topic ordersTopic;
+    @Channel("orders")
+    Emitter<String> ordersEmitter;
   
-    public void  process(ShoppingCart cart) {
+    public void process(ShoppingCart cart) {
         log.info("Sending order from processor: ");
-        context.createProducer().send(ordersTopic, Transformers.shoppingCartToJson(cart));
+        ordersEmitter.send(Transformers.shoppingCartToJson(cart));
     }
 
 
