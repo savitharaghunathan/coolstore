@@ -58,12 +58,11 @@
             <scope>provided</scope>
         </dependency>
         <!-- Audit logging library from local Maven repo -->
+        <!-- Install to local Maven repo with: mvn install:install-file -Dfile=lib/audit-logging-library-1.0.0.jar -DgroupId=com.enterprise -DartifactId=audit-logging-library -Dversion=1.0.0 -Dpackaging=jar -->
         <dependency>
             <groupId>com.enterprise</groupId>
             <artifactId>audit-logging-library</artifactId>
             <version>1.0.0</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/lib/audit-logging-library-1.0.0.jar</systemPath>
         </dependency>
         <!-- Test dependencies -->
         <dependency>
