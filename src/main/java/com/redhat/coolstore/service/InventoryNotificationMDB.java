@@ -8,7 +8,7 @@ import jakarta.inject.Inject;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
-import io.quarkus.artemis.jms.consumer.JMSConsumer;
+import io.quarkiverse.artemis.jms.Incoming;
 
 @ApplicationScoped
 public class InventoryNotificationMDB {
@@ -18,7 +18,7 @@ public class InventoryNotificationMDB {
     @Inject
     private CatalogService catalogService;
 
-    @JMSConsumer("orders")
+    @Incoming("orders")
     public void onMessage(Message rcvMessage) {
         TextMessage msg;
         try {

@@ -73,6 +73,11 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc</artifactId>
         </dependency>
+        <!-- JAXB for XML binding -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jaxb</artifactId>
+        </dependency>
         <!-- Audit logging library - converted from system scope -->
         <dependency>
             <groupId>com.enterprise</groupId>

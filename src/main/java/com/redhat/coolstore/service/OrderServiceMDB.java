@@ -5,7 +5,7 @@ import jakarta.inject.Inject;
 import jakarta.jms.JMSException;
 import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
-import io.quarkus.artemis.jms.consumer.JMSConsumer;
+import io.quarkiverse.artemis.jms.Incoming;
 
 import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.utils.Transformers;
@@ -19,7 +19,7 @@ public class OrderServiceMDB {
 	@Inject
 	CatalogService catalogService;
 
-	@JMSConsumer("orders")
+	@Incoming("orders")
 	public void onMessage(Message rcvMessage) {
 		System.out.println("\nMessage recd !");
 		TextMessage msg = null;
