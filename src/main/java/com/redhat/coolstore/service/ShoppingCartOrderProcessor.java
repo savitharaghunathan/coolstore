@@ -1,7 +1,7 @@
 package com.redhat.coolstore.service;
 
 import java.util.logging.Logger;
-import javax.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.annotation.Resource;
 import jakarta.inject.Inject;
 import javax.jms.JMSContext;
@@ -10,7 +10,7 @@ import javax.jms.Topic;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.utils.Transformers;
 
-@Stateless
+@ApplicationScoped
 public class ShoppingCartOrderProcessor  {
 
     @Inject
