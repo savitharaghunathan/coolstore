@@ -3,28 +3,25 @@ package com.redhat.coolstore.service;
 import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.utils.Transformers;
 
-import javax.inject.Inject;
-import javax.jms.*;
-import javax.naming.Context;
-import javax.naming.InitialContext;
-import javax.naming.NamingException;
-import javax.rmi.PortableRemoteObject;
-import java.util.Hashtable;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.jms.*;
+import jakarta.transaction.Transactional;
 
-public class InventoryNotificationMDB implements MessageListener {
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+
+@ApplicationScoped
+@RegisterForReflection
+public class InventoryNotificationMDB {
 
     private static final int LOW_THRESHOLD = 50;
 
     @Inject
     private CatalogService catalogService;
 
-    private final static String JNDI_FACTORY = "weblogic.jndi.WLInitialContextFactory";
-    private final static String JMS_FACTORY = "TCF";
-    private final static String TOPIC = "topic/orders";
-    private TopicConnection tcon;
-    private TopicSession tsession;
-    private TopicSubscriber tsubscriber;
-
+    @Incoming("orders")
+    @Transactional
     public void onMessage(Message rcvMessage) {
         TextMessage msg;
         {
@@ -44,36 +41,9 @@ public class InventoryNotificationMDB implements MessageListener {
                         }
                     });
                 }
-
-
             } catch (JMSException jmse) {
                 System.err.println("An exception occurred: " + jmse.getMessage());
             }
         }
-    }
-
-    public void init() throws NamingException, JMSException {
-        Context ctx = getInitialContext();
-        TopicConnectionFactory tconFactory = (TopicConnectionFactory) PortableRemoteObject.narrow(ctx.lookup(JMS_FACTORY), TopicConnectionFactory.class);
-        tcon = tconFactory.createTopicConnection();
-        tsession = tcon.createTopicSession(false, Session.AUTO_ACKNOWLEDGE);
-        Topic topic = (Topic) PortableRemoteObject.narrow(ctx.lookup(TOPIC), Topic.class);
-        tsubscriber = tsession.createSubscriber(topic);
-        tsubscriber.setMessageListener(this);
-        tcon.start();
-    }
-
-    public void close() throws JMSException {
-        tsubscriber.close();
-        tsession.close();
-        tcon.close();
-    }
-
-    private static InitialContext getInitialContext() throws NamingException {
-        Hashtable<String, String> env = new Hashtable<>();
-        env.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
-        env.put(Context.PROVIDER_URL, "t3://localhost:7001");
-        env.put("weblogic.jndi.createIntermediateContexts", "true");
-        return new InitialContext(env);
     }
 }

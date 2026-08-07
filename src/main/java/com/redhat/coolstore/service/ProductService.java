@@ -1,17 +1,18 @@
 package com.redhat.coolstore.service;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.transaction.Transactional;
 
 import com.redhat.coolstore.model.CatalogItemEntity;
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.utils.Transformers;
 
-import javax.ejb.Stateless;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.redhat.coolstore.utils.Transformers.toProduct;
 
-@Stateless
+@ApplicationScoped
 public class ProductService {
 
     @Inject

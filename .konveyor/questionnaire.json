@@ -1,0 +1,501 @@
+{
+  "metadata": {
+    "timestamp": "2026-08-06T21:48:00Z",
+    "stage": "questionnaire",
+    "migration_type": "Java EE to Quarkus 3",
+    "interactive_mode": false,
+    "project_name": "coolstore-monolith"
+  },
+  "detection": {
+    "build_system": {
+      "tool": "Apache Maven",
+      "version": "3.x",
+      "packaging": "WAR",
+      "java_version": "1.8",
+      "group_id": "com.redhat.coolstore",
+      "artifact_id": "monolith",
+      "project_version": "1.0.0-SNAPSHOT"
+    },
+    "technology_stack": {
+      "platform": "Java EE 7",
+      "application_server": "JBoss EAP 7.4",
+      "frameworks": [
+        "CDI 1.1",
+        "EJB 3.2",
+        "JPA 2.1",
+        "JAX-RS 2.0",
+        "JMS 2.0",
+        "Servlet 3.0"
+      ],
+      "libraries": [
+        "Hibernate EntityManager 5.1.17",
+        "Flyway 4.1.2",
+        "JUnit 4.13.2",
+        "Mockito 1.10.19"
+      ],
+      "database": "PostgreSQL",
+      "security": "Keycloak 20.0.5"
+    },
+    "source_statistics": {
+      "java_files": 30,
+      "packaging_type": "Distributable WAR",
+      "clustering_enabled": true
+    },
+    "configuration_files": [
+      "pom.xml",
+      "src/main/resources/META-INF/persistence.xml",
+      "src/main/webapp/WEB-INF/web.xml",
+      "src/main/webapp/WEB-INF/beans.xml",
+      "src/main/webapp/keycloak.json"
+    ],
+    "migration_challenges": [
+      {
+        "category": "vendor_specific_code",
+        "description": "WebLogic-specific APIs detected",
+        "details": [
+          "weblogic.application.ApplicationLifecycleListener",
+          "weblogic.application.ApplicationLifecycleEvent",
+          "weblogic.i18n.logging.NonCatalogLogger"
+        ],
+        "severity": "medium",
+        "effort": "low"
+      },
+      {
+        "category": "dependency_management",
+        "description": "System-scoped dependency detected",
+        "details": [
+          "audit-logging-library-1.0.0.jar (system-scoped)"
+        ],
+        "severity": "low",
+        "effort": "low"
+      },
+      {
+        "category": "messaging",
+        "description": "JMS/ActiveMQ messaging infrastructure",
+        "details": [
+          "Message-driven beans for topic/orders",
+          "JMS 2.0 API with clustering support"
+        ],
+        "severity": "medium",
+        "effort": "medium"
+      },
+      {
+        "category": "ejb_migration",
+        "description": "EJB components requiring migration",
+        "details": [
+          "@Stateless beans",
+          "@Singleton beans",
+          "@Stateful beans",
+          "@MessageDriven beans",
+          "Transaction management (JTA)"
+        ],
+        "severity": "high",
+        "effort": "medium"
+      },
+      {
+        "category": "data_access",
+        "description": "JPA/Hibernate with JTA datasource",
+        "details": [
+          "JTA datasource: java:jboss/datasources/CoolstoreDS",
+          "Flyway migrations in db/ directory"
+        ],
+        "severity": "low",
+        "effort": "low"
+      },
+      {
+        "category": "clustering",
+        "description": "High availability configuration",
+        "details": [
+          "Distributable web application",
+          "ActiveMQ clustering",
+          "Session replication"
+        ],
+        "severity": "medium",
+        "effort": "medium"
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "java-version",
+      "question": "Which Java version should be targeted for the Quarkus 3 migration?",
+      "category": "platform",
+      "options": [
+        {
+          "value": "java-11",
+          "label": "Java 11 (LTS, minimum for Quarkus 3)",
+          "description": "Minimum supported version, widely compatible"
+        },
+        {
+          "value": "java-17",
+          "label": "Java 17 (LTS, recommended for Quarkus 3)",
+          "description": "Recommended LTS version with modern features and excellent support"
+        },
+        {
+          "value": "java-21",
+          "label": "Java 21 (Latest LTS)",
+          "description": "Latest features but less enterprise adoption currently"
+        }
+      ],
+      "selected": "java-17",
+      "reasoning": "Java 17 is the recommended LTS version for Quarkus 3.x, providing excellent support, stability, and modern features without being bleeding edge. It's widely adopted in enterprise environments and offers the best balance of features, performance, and ecosystem support.",
+      "impact": "high",
+      "effort": "low"
+    },
+    {
+      "id": "ejb-migration-strategy",
+      "question": "How should EJB components be migrated to Quarkus?",
+      "category": "architecture",
+      "options": [
+        {
+          "value": "cdi-conversion",
+          "label": "Convert to CDI beans with Quarkus extensions",
+          "description": "@Stateless/@Singleton → @ApplicationScoped, use @Transactional"
+        },
+        {
+          "value": "ejb-compatibility",
+          "label": "Use minimal EJB compatibility extension",
+          "description": "Keep some EJB annotations temporarily"
+        },
+        {
+          "value": "hybrid-approach",
+          "label": "Gradual migration with mixed approach",
+          "description": "Convert incrementally over multiple iterations"
+        }
+      ],
+      "selected": "cdi-conversion",
+      "reasoning": "Quarkus favors CDI over EJB. Converting @Stateless/@Singleton to @ApplicationScoped and @Stateful to @SessionScoped aligns with Quarkus best practices. Use Quarkus transaction annotations (@Transactional) for declarative transaction management. This provides a clean, modern approach without legacy baggage.",
+      "impact": "high",
+      "effort": "medium"
+    },
+    {
+      "id": "messaging-migration",
+      "question": "What messaging approach should be used for JMS migration?",
+      "category": "messaging",
+      "options": [
+        {
+          "value": "quarkus-artemis-jms",
+          "label": "Quarkus Artemis extension (JMS compatible)",
+          "description": "Maintains JMS API compatibility with minimal code changes"
+        },
+        {
+          "value": "reactive-messaging-kafka",
+          "label": "Quarkus Reactive Messaging with Kafka",
+          "description": "Modern reactive approach with Kafka as broker"
+        },
+        {
+          "value": "reactive-messaging-amqp",
+          "label": "SmallRye Reactive Messaging with AMQP",
+          "description": "Reactive messaging with AMQP protocol"
+        }
+      ],
+      "selected": "quarkus-artemis-jms",
+      "reasoning": "The quarkus-artemis-jms extension provides JMS API compatibility, minimizing code changes for existing Message-Driven Beans. This allows for a smoother initial migration while keeping the option to convert to @Incoming/@Outgoing reactive messaging later if desired. Artemis is well-integrated with Quarkus and provides clustering support.",
+      "impact": "high",
+      "effort": "low"
+    },
+    {
+      "id": "database-persistence",
+      "question": "How should database persistence and migrations be handled?",
+      "category": "data_access",
+      "options": [
+        {
+          "value": "hibernate-orm-flyway",
+          "label": "Hibernate ORM with Quarkus + Flyway",
+          "description": "Continue using JPA/Hibernate ORM and Flyway migrations"
+        },
+        {
+          "value": "hibernate-reactive",
+          "label": "Migrate to Hibernate Reactive",
+          "description": "Use reactive database access with Hibernate Reactive"
+        },
+        {
+          "value": "panache",
+          "label": "Use Quarkus Hibernate ORM with Panache",
+          "description": "Simplified persistence layer with active record pattern"
+        }
+      ],
+      "selected": "hibernate-orm-flyway",
+      "reasoning": "Quarkus has excellent Hibernate ORM support via quarkus-hibernate-orm extension. Keeping Flyway (quarkus-flyway) ensures database migration continuity. JPA entities and EntityManager code will work with minimal changes. This approach minimizes risk while maintaining familiar patterns. Panache can be adopted later if desired.",
+      "impact": "medium",
+      "effort": "low"
+    },
+    {
+      "id": "rest-api-migration",
+      "question": "Which REST framework should be used for JAX-RS endpoints?",
+      "category": "rest_api",
+      "options": [
+        {
+          "value": "resteasy-reactive",
+          "label": "Quarkus RESTEasy Reactive",
+          "description": "Reactive JAX-RS implementation with better performance"
+        },
+        {
+          "value": "resteasy-classic",
+          "label": "Quarkus RESTEasy Classic",
+          "description": "Traditional JAX-RS compatible implementation"
+        },
+        {
+          "value": "quarkus-rest",
+          "label": "Quarkus REST (new Jakarta REST)",
+          "description": "Modern Quarkus-native REST approach"
+        }
+      ],
+      "selected": "resteasy-reactive",
+      "reasoning": "RESTEasy Reactive (quarkus-resteasy-reactive-jackson) provides better performance and scalability while maintaining JAX-RS compatibility. The existing @Path, @GET, @POST annotations will work with minimal or no changes. This gives the benefits of reactive processing while preserving the familiar JAX-RS programming model.",
+      "impact": "medium",
+      "effort": "low"
+    },
+    {
+      "id": "weblogic-migration",
+      "question": "How should WebLogic-specific APIs be replaced?",
+      "category": "vendor_specific",
+      "options": [
+        {
+          "value": "quarkus-lifecycle-events",
+          "label": "Replace with Quarkus lifecycle events",
+          "description": "Use @Observes StartupEvent/ShutdownEvent"
+        },
+        {
+          "value": "remove-entirely",
+          "label": "Remove WebLogic APIs entirely",
+          "description": "Eliminate lifecycle listeners if not needed"
+        },
+        {
+          "value": "adapter-layer",
+          "label": "Create adapter/compatibility layer",
+          "description": "Build abstraction for gradual migration"
+        }
+      ],
+      "selected": "quarkus-lifecycle-events",
+      "reasoning": "Quarkus provides @Observes StartupEvent and @Observes ShutdownEvent for application lifecycle management, which directly replaces WebLogic's ApplicationLifecycleListener. This is a clean, standard approach without vendor lock-in. The migration is straightforward: convert lifecycle methods to CDI observer methods.",
+      "impact": "medium",
+      "effort": "low"
+    },
+    {
+      "id": "security-migration",
+      "question": "How should Keycloak integration be migrated?",
+      "category": "security",
+      "options": [
+        {
+          "value": "quarkus-oidc",
+          "label": "Use quarkus-oidc extension",
+          "description": "Modern OpenID Connect integration with Keycloak"
+        },
+        {
+          "value": "quarkus-keycloak-authorization",
+          "label": "Use quarkus-keycloak-authorization",
+          "description": "Keycloak-specific authorization extension"
+        },
+        {
+          "value": "security-jwt",
+          "label": "Quarkus Security with JWT",
+          "description": "Generic JWT-based security"
+        }
+      ],
+      "selected": "quarkus-oidc",
+      "reasoning": "The quarkus-oidc extension provides seamless Keycloak integration using OpenID Connect protocol, replacing the legacy Keycloak adapter. This is the modern, recommended approach with excellent Quarkus support. Configuration migrates from keycloak.json to application.properties with OIDC-specific properties.",
+      "impact": "high",
+      "effort": "medium"
+    },
+    {
+      "id": "build-packaging",
+      "question": "What packaging format should be used for the Quarkus application?",
+      "category": "build",
+      "options": [
+        {
+          "value": "fast-jar",
+          "label": "JAR packaging (Quarkus fast-jar)",
+          "description": "Default Quarkus packaging with optimal startup time"
+        },
+        {
+          "value": "uber-jar",
+          "label": "Uber-JAR packaging",
+          "description": "Single JAR with all dependencies"
+        },
+        {
+          "value": "native",
+          "label": "Native executable",
+          "description": "GraalVM native compilation for containers"
+        }
+      ],
+      "selected": "fast-jar",
+      "reasoning": "Quarkus uses JAR packaging by default with fast-jar format, which provides optimal startup time and is the recommended approach for JVM mode. This eliminates the need for WAR deployment to an application server. Native compilation can be explored later for containerized deployments if sub-second startup is required.",
+      "impact": "high",
+      "effort": "low"
+    },
+    {
+      "id": "system-dependencies",
+      "question": "How should the system-scoped audit-logging-library dependency be handled?",
+      "category": "dependency_management",
+      "options": [
+        {
+          "value": "maven-repository",
+          "label": "Convert to standard Maven dependency",
+          "description": "Install to local/company Maven repository"
+        },
+        {
+          "value": "keep-system-scope",
+          "label": "Keep as system dependency temporarily",
+          "description": "Maintain current approach during migration"
+        },
+        {
+          "value": "refactor-remove",
+          "label": "Refactor to remove dependency",
+          "description": "Replace with alternative logging solution"
+        }
+      ],
+      "selected": "maven-repository",
+      "reasoning": "System-scoped dependencies are fragile and not portable. Installing the audit-logging-library JAR to a local or company Maven repository (or using Maven's install-file goal) provides a proper dependency management solution. This eliminates the hardcoded systemPath and makes the build more reliable and portable.",
+      "impact": "low",
+      "effort": "low"
+    },
+    {
+      "id": "testing-framework",
+      "question": "What testing approach should be adopted for Quarkus?",
+      "category": "testing",
+      "options": [
+        {
+          "value": "quarkus-test-junit5",
+          "label": "Migrate to @QuarkusTest with JUnit 5",
+          "description": "Use Quarkus testing framework with full CDI/persistence support"
+        },
+        {
+          "value": "keep-junit4",
+          "label": "Keep existing JUnit 4 tests",
+          "description": "Maintain current testing approach"
+        },
+        {
+          "value": "mixed-approach",
+          "label": "Mixed JUnit 4 and JUnit 5",
+          "description": "Gradual migration of test suite"
+        }
+      ],
+      "selected": "quarkus-test-junit5",
+      "reasoning": "Quarkus provides excellent testing support with @QuarkusTest annotation, enabling fast test execution with full CDI, transaction, and persistence context support. Upgrading from JUnit 4 to JUnit 5 provides better features and aligns with modern Java testing practices. The migration effort is justified by improved test performance and developer experience.",
+      "impact": "medium",
+      "effort": "medium"
+    },
+    {
+      "id": "configuration-format",
+      "question": "What configuration format should be used for Quarkus?",
+      "category": "configuration",
+      "options": [
+        {
+          "value": "application-properties",
+          "label": "application.properties",
+          "description": "Quarkus default configuration format"
+        },
+        {
+          "value": "application-yaml",
+          "label": "application.yaml",
+          "description": "YAML-based configuration"
+        },
+        {
+          "value": "mixed-config",
+          "label": "Mixed properties and YAML",
+          "description": "Use both formats for different concerns"
+        }
+      ],
+      "selected": "application-properties",
+      "reasoning": "Quarkus strongly favors application.properties for configuration with excellent IDE support and type-safe config via @ConfigProperty. Migrating datasource, JMS, security, and other configurations from XML/JSON to properties format provides a unified, simple configuration approach. The properties format is well-documented and widely used in the Quarkus ecosystem.",
+      "impact": "medium",
+      "effort": "low"
+    },
+    {
+      "id": "development-workflow",
+      "question": "What development workflow should be adopted?",
+      "category": "development",
+      "options": [
+        {
+          "value": "quarkus-dev-mode",
+          "label": "Quarkus Dev Mode with live reload",
+          "description": "Use `mvn quarkus:dev` for continuous testing"
+        },
+        {
+          "value": "traditional-build",
+          "label": "Traditional build-deploy cycle",
+          "description": "Maven build with manual testing"
+        },
+        {
+          "value": "container-dev",
+          "label": "Container-based development",
+          "description": "Develop with container runtime"
+        }
+      ],
+      "selected": "quarkus-dev-mode",
+      "reasoning": "Quarkus Dev Mode (`mvn quarkus:dev`) provides live reload, continuous testing, and dev services (automatic database/messaging infrastructure). This is a major productivity improvement over traditional Java EE development cycles. Dev Mode automatically recompiles and reloads changes, enabling rapid iteration without server restarts.",
+      "impact": "medium",
+      "effort": "low"
+    }
+  ],
+  "summary": {
+    "total_decisions": 12,
+    "high_impact_decisions": 5,
+    "medium_impact_decisions": 6,
+    "low_impact_decisions": 1,
+    "estimated_effort": {
+      "low": 7,
+      "medium": 5,
+      "high": 0
+    },
+    "key_migration_paths": [
+      "Java 8 → Java 17",
+      "WAR packaging → JAR packaging (fast-jar)",
+      "EJB → CDI beans with @Transactional",
+      "JBoss EAP datasource → Quarkus datasource config",
+      "JAX-RS → RESTEasy Reactive",
+      "JMS MDBs → Quarkus Artemis JMS",
+      "WebLogic lifecycle → Quarkus lifecycle events",
+      "Keycloak adapter → quarkus-oidc",
+      "JUnit 4 → JUnit 5 with @QuarkusTest",
+      "XML/JSON config → application.properties"
+    ],
+    "required_quarkus_extensions": [
+      "quarkus-hibernate-orm",
+      "quarkus-jdbc-postgresql",
+      "quarkus-flyway",
+      "quarkus-resteasy-reactive-jackson",
+      "quarkus-artemis-jms",
+      "quarkus-oidc",
+      "quarkus-narayana-jta",
+      "quarkus-arc (CDI)",
+      "quarkus-junit5",
+      "quarkus-test-h2 (for testing)"
+    ],
+    "migration_risks": [
+      {
+        "risk": "Clustering/HA features may require redesign",
+        "mitigation": "Evaluate cloud-native patterns for high availability",
+        "severity": "medium"
+      },
+      {
+        "risk": "Message-driven bean behavior differences",
+        "mitigation": "Thorough testing of JMS message processing",
+        "severity": "low"
+      },
+      {
+        "risk": "Transaction boundary changes from EJB to CDI",
+        "mitigation": "Explicit @Transactional annotations and testing",
+        "severity": "medium"
+      },
+      {
+        "risk": "WebLogic-specific code replacement",
+        "mitigation": "Well-defined lifecycle events in Quarkus",
+        "severity": "low"
+      }
+    ],
+    "next_steps": [
+      "Create migration plan based on questionnaire decisions",
+      "Set up Quarkus project structure with selected extensions",
+      "Migrate configuration from XML to application.properties",
+      "Convert EJB components to CDI beans",
+      "Migrate JAX-RS endpoints to RESTEasy Reactive",
+      "Replace WebLogic lifecycle listeners",
+      "Configure Artemis JMS messaging",
+      "Update security to quarkus-oidc",
+      "Migrate tests to @QuarkusTest and JUnit 5",
+      "Test thoroughly in dev mode before final migration"
+    ]
+  }
+}
