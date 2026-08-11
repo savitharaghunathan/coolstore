@@ -4,12 +4,12 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
 
 import jakarta.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import jakarta.enterprise.context.ApplicationScoped;
 import io.quarkus.runtime.Startup;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
-import javax.inject.Inject;
+import jakarta.ejb.TransactionManagement;
+import jakarta.ejb.jakarta.ejb.TransactionManagementType;
+import jakarta.inject.Inject;
 import javax.sql.DataSource;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  */
 @ApplicationScoped
 @Startup
-@TransactionManagement(TransactionManagementType.BEAN)
+@TransactionManagement(jakarta.ejb.TransactionManagementType.BEAN)
 public class DataBaseMigrationStartup {
 
     @Inject
