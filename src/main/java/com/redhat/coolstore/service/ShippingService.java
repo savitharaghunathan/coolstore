@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import javax.ejb.Remote;
-import javax.ejb.Stateless;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import com.redhat.coolstore.model.ShoppingCart;
 
-@Stateless
+@ApplicationScoped
 @Remote
 public class ShippingService implements ShippingServiceRemote {
 
