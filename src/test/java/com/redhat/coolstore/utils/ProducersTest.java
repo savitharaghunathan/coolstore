@@ -2,7 +2,7 @@ package com.redhat.coolstore.utils;
 
 import org.junit.jupiter.api.Test;
 
-import javax.enterprise.inject.spi.InjectionPoint;
+import jakarta.enterprise.inject.spi.InjectionPoint;
 import java.lang.reflect.Member;
 import java.util.logging.Logger;
 

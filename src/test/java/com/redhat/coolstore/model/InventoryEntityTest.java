@@ -1,6 +1,6 @@
 package com.redhat.coolstore.model;
 
-import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +21,7 @@ public class InventoryEntityTest {
         em = emf.createEntityManager();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         if (em != null && em.isOpen()) em.close();
         if (emf != null && emf.isOpen()) emf.close();
