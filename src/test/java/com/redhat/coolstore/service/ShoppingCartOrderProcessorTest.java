@@ -15,7 +15,7 @@ import jakarta.jms.JMSProducer;
 import jakarta.jms.Topic;
 import java.util.logging.Logger;
 
-import static org.junit.jupiter.api.Assertions.*;;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class ShoppingCartOrderProcessorTest {
