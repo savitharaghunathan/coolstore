@@ -2,8 +2,8 @@ package com.redhat.coolstore.rest;
 
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.service.ProductService;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -23,7 +23,7 @@ public class ProductEndpointTest {
     @InjectMocks
     private ProductEndpoint endpoint;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
     }

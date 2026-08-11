@@ -1,14 +1,14 @@
 package com.redhat.coolstore.model;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import static org.junit.Assert.*;
 
 public class ShoppingCartTest {
 
     private ShoppingCart cart;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         cart = new ShoppingCart();
     }

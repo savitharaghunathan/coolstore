@@ -1,6 +1,6 @@
 package com.redhat.coolstore.utils;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.enterprise.inject.spi.InjectionPoint;
 import java.lang.reflect.Member;

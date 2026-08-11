@@ -4,8 +4,8 @@ import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.Promotion;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
@@ -15,7 +15,7 @@ public class PromoServiceTest {
 
     private PromoService promoService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         promoService = new PromoService();
     }

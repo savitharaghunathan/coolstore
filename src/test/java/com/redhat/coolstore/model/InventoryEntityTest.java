@@ -1,12 +1,12 @@
 package com.redhat.coolstore.model;
 
 import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 
 import static org.junit.Assert.*;
 
@@ -15,7 +15,7 @@ public class InventoryEntityTest {
     private EntityManagerFactory emf;
     private EntityManager em;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         emf = Persistence.createEntityManagerFactory("primary");
         em = emf.createEntityManager();

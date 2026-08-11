@@ -3,8 +3,8 @@ package com.redhat.coolstore.service;
 import com.redhat.coolstore.model.CatalogItemEntity;
 import com.redhat.coolstore.model.InventoryEntity;
 import com.redhat.coolstore.model.Product;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -24,7 +24,7 @@ public class ProductServiceTest {
     @InjectMocks
     private ProductService productService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
     }
