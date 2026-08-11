@@ -11,7 +11,7 @@ import org.mockito.MockitoAnnotations;
 import jakarta.jms.JMSException;
 import jakarta.jms.TextMessage;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;;
 import static org.mockito.Mockito.*;
 
 public class OrderServiceMDBTest {

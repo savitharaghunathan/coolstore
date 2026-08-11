@@ -6,7 +6,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import java.lang.reflect.Member;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;;
 import static org.mockito.Mockito.*;
 
 public class ProducersTest {
