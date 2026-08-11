@@ -8,7 +8,7 @@ import jakarta.annotation.Resource;
 import jakarta.enterprise.context.ApplicationScoped;
 import io.quarkus.runtime.Startup;
 import jakarta.ejb.TransactionManagement;
-import jakarta.ejb.jakarta.ejb.TransactionManagementType;
+import jakarta.ejb.TransactionManagementType;
 import jakarta.inject.Inject;
 import javax.sql.DataSource;
 import java.util.logging.Level;
