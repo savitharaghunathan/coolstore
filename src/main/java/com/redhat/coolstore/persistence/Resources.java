@@ -1,18 +1,14 @@
 package com.redhat.coolstore.persistence;
 
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.Produces;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import jakarta.enterprise.context.Dependent;
+import jakarta.enterprise.inject.Produces;
+import java.util.logging.Logger;
 
 @Dependent
 public class Resources {
 
-    @PersistenceContext
-    private EntityManager em;
-
     @Produces
-    public EntityManager getEntityManager() {
-        return em;
+    public Logger getLogger(jakarta.enterprise.inject.spi.InjectionPoint ip) {
+        return Logger.getLogger(ip.getMember().getDeclaringClass().getName());
     }
 }
