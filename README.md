@@ -1,19 +1,32 @@
-# CoolStore Monolith
+# CoolStore Monolith - Quarkus Migration
 
-This repository has the complete coolstore monolith built as a Java EE 7 application. To deploy it on JBoss 7.4 follow the instructions below
+This repository contains the CoolStore Monolith application, migrated from WebLogic/JBoss EAP to Quarkus.
 
+## Prerequisites
 
-## Pre requisite
+* Java 17 or later
+* Maven 3.8.5 or later
+* Docker or Podman (tested with podman version 4.3.1)
 
-* JBoss 7.4 zip installation
-* Keycloak v20.0.5 zip installation
-* podman or docker, tested with podman version 4.3.1
-* maven, tested with maven version 3.8.5
-* OpenJDK, tested with version 17.0.5
+## Quick Start with Dev Mode
 
-## Start a postgreSQL database
+Quarkus provides a powerful development mode with hot reload:
 
+```bash
+./mvnw quarkus:dev
 ```
+
+This will:
+- Start the application on http://localhost:8080
+- Automatically start Kafka via Dev Services (testcontainer)
+- Use H2 in-memory database
+- Enable live reload for code changes
+
+## Running with PostgreSQL and Kafka
+
+### Start PostgreSQL
+
+```bash
 podman run --name myPostgresDb \
    -p 5432:5432 \
    -e POSTGRES_USER=postgresUser \
@@ -22,161 +35,142 @@ podman run --name myPostgresDb \
    -d postgres
 ```
 
-## Start keycloak
+### Start Kafka
 
-Extract keycloak-20.0.5.zip
-
-```cd keycloak-20.0.5```
-
-Start keycloak in dev mode listening on port 8081
-
-``` ./bin/kc.sh start-dev --http-port=8081 ```
-
-Open http://127.0.0.1:8081 in your browser
-
-
-Set an administrator username and password, then login to keycloak using these credentials
-
-Click on the "Master" dropdown, and select "Create Realm"
-
-Click on "Browse" and locate the file realm-export.json in this repo.
-
-Click on "Create" to create the "eap" realm
-
-Click on "Users" and "Create new user"
-
-Enter a username, e.g. "user1" and click on "Create"
-
-From the next form, click on the "Credentials" tab and "Set password"
-
-Set a password and password confirmation, and unselect "Temporary"
-
-Click on "Save" to store the password.
-
-Keycloak is now configured correctly
-
-## Configure JBoss 7.4
-
-Unzip jboss-eap-7.4.0.zip
-
-``` cd jboss-eap-7.4/jboss-eap-7.4 ```
-
-Create the folder modules/org/postgresql/main
-
-``` mkdir -p modules/org/postgresql/main ```
-
-
-Download the postgres jdbc driver from https://jdbc.postgresql.org/download/  e.g. https://jdbc.postgresql.org/download/postgresql-42.5.4.jar
-
- Copy postgres jar file to modules/org/postgresql/main
-
-create module.xml  -- ensure the filename matches the filename downloaded in the previous step
-
-```
-cat <<EOF > modules/org/postgresql/main/module.xml
-<?xml version="1.0" encoding="UTF-8"?>
-<module xmlns="urn:jboss:module:1.0" name="org.postgresql">
- <resources>
- <resource-root path="postgresql-42.5.4.jar"/>
- </resources>
- <dependencies>
- <module name="javax.api"/>
- <module name="javax.transaction.api"/>
- </dependencies>
-</module>
-EOF
+```bash
+podman run --name kafka \
+   -p 9092:9092 \
+   -e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 \
+   -d quay.io/strimzi/kafka:latest-kafka-3.6.0
 ```
 
+### Start Keycloak
 
-Start JBoss EAP 7.4 in full high availability mode
-
-From the jboss-eap-7.4 folder run:
-
-```./jboss-eap-7.4-2/bin/standalone.sh -c standalone-full-ha.xml  -Djboss.node.name=node1 ```
-
-In another terminal, start the jboss cli, from the jboss7.4 installation folder run 
-
-```  ./bin/jboss-cli.sh --connect ```
-
-Run the following commands:
-
-```
-/subsystem=datasources/jdbc-driver=postgresql:add(driver-name=postgresql,driver-module-name=org.postgresql)
+```bash
+podman run --name keycloak \
+   -p 8081:8080 \
+   -e KEYCLOAK_ADMIN=admin \
+   -e KEYCLOAK_ADMIN_PASSWORD=admin \
+   quay.io/keycloak/keycloak:latest start-dev
 ```
 
+Open http://127.0.0.1:8081 and:
+1. Login with admin/admin
+2. Create a new realm by importing `realm-export.json`
+3. Create a user (e.g., "user1") in the "eap" realm
+4. Set the user's password
+
+### Build and Run
+
+```bash
+# Build the application
+./mvnw package
+
+# Run in JVM mode
+java -jar target/quarkus-app/quarkus-run.jar
+
+# Or run with Quarkus
+./mvnw quarkus:dev
 ```
- data-source add --name=CoolstoreDS --jndi-name=java:jboss/datasources/CoolstoreDS --driver-name=postgresql --connection-url=jdbc:postgresql://127.0.0.1:5432/postgresDB --user-name=postgresUser --password=postgresPW
- ```
-
-```
-jms-topic add --topic-address=topic.orders --entries=topic/orders
-
-/subsystem=messaging-activemq/server=default:write-attribute(name=cluster-password, value=password)
-```
-
-## Build and deploy the application
-
-From the root of this repo, run: 
-
-`mvn package`
-
-Set the JBOSS_HOME env variable e.g. 
-
-`export JBOSS_HOME=~/jboss-eap-7.4/jboss-eap-7.4`
-
-Run the jboss cli: 
-
-` $JBOSS_HOME/bin/jboss-cli.sh`
-
-Run the following command to deploy the application:
-
- `deploy ./target/ROOT.war`
 
 Navigate to http://127.0.0.1:8080
 
 ![coolstore](assets/coolstore.png "coolstore")
 
-From the coostore, click on "Sign in" in the top right
+## Docker/Container Deployment
 
-Login with the user credentials created on Keycloak, e.g. user1
+### Build Container Image
 
-You should now be able to complete the checkout process.
+```bash
+# Build the application
+./mvnw package
 
-## Start a second instance.
+# Build container image
+docker build -f Dockerfile.jvm -t quarkus/coolstore-jvm .
 
-Make a copy of the jboss-eap-7.4/jboss-eap-7.4 e.g jboss-eap-7.4/jboss-eap-7.4-2
-
-Within the jboss-eap-7.4 folder you should now see jboss-eap-7.4 and jboss-eap-7.4-2
-
-In the jboss-eap-7.4-2, remove the contents of standalone/data/activemq
-
-From the jboss-eap-7.4 folder run:
-
-`./jboss-eap-7.4-2/bin/standalone.sh -c standalone-full-ha.xml -Djboss.socket.binding.port-offset=100  -Djboss.node.name=node2`
-
-## Monitor the logs
-
-Open up two terminals in the jboss-eap-7.4 folder
-
-Run:
-
-`tail -f jboss-eap-7.4/standalone/log/server.log` 
-
-in one terminal and 
-
-`tail -f jboss-eap-7.4-2/standalone/log/server.log` 
-
-in the other
-
-## Testing clustering
-
-If you perform a test checkout of an item, you should see both nodes processing the messages in the logs e.g.
-
+# Run the container
+docker run -i --rm -p 8080:8080 \
+  -e QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://host.docker.internal:5432/postgresDB \
+  -e KAFKA_BOOTSTRAP_SERVERS=host.docker.internal:9092 \
+  quarkus/coolstore-jvm
 ```
-2023-03-02 14:41:23,131 INFO  [stdout] (Thread-3 (ActiveMQ-client-global-threads)) 
-2023-03-02 14:41:23,131 INFO  [stdout] (Thread-3 (ActiveMQ-client-global-threads)) Message recd !
-2023-03-02 14:41:23,131 INFO  [stdout] (Thread-3 (ActiveMQ-client-global-threads)) Received order: {"orderValue":10.49,"customerName":"Karl Svensson","customerEmail":"karl@gmail.com","retailPrice":10.0,"discount":-2.5,"shippingFee":2.99,"shippingDiscount":0.0,"items":[{"productSku":"329299","quantity":1}]}
-2023-03-02 14:41:23,132 INFO  [stdout] (Thread-3 (ActiveMQ-client-global-threads)) Order object is Order [orderId=0, customerName=Karl Svensson, customerEmail=karl@gmail.com, orderValue=10.49, retailPrice=10.0, discount=-2.5, shippingFee=2.99, shippingDiscount=0.0, itemList=[OrderItem [productId=329299, quantity=1]]]
 
+## Configuration
 
+The application is configured via `src/main/resources/application.properties`. Key configurations:
+
+- **Database**: PostgreSQL (production), H2 (dev/test)
+- **Messaging**: Kafka for order processing
+- **Security**: OIDC/Keycloak integration
+- **Port**: 8080 (configurable via `quarkus.http.port`)
+
+### Profile-based Configuration
+
+- **%dev**: Development mode with H2 and Kafka Dev Services
+- **%test**: Test mode with H2 in-memory database
+- **%prod**: Production mode (default) with PostgreSQL and Kafka
+
+## Features
+
+- **RESTful API**: JAX-RS endpoints for products, orders, and shopping cart
+- **Persistence**: JPA/Hibernate with PostgreSQL
+- **Messaging**: Reactive messaging with Kafka for order processing
+- **Security**: OIDC integration with Keycloak
+- **Database Migration**: Flyway for schema management
+
+## API Endpoints
+
+- `GET /services/products` - List all products
+- `GET /services/products/{itemId}` - Get product by ID
+- `GET /services/cart/{cartId}` - Get shopping cart
+- `POST /services/cart/{cartId}/{itemId}/{quantity}` - Add item to cart
+- `POST /services/cart/checkout/{cartId}` - Checkout cart
+- `GET /services/orders` - List all orders
+- `GET /services/orders/{orderId}` - Get order by ID
+
+## Development
+
+### Live Reload
+
+In dev mode (`./mvnw quarkus:dev`), Quarkus automatically reloads on code changes.
+
+### Testing
+
+```bash
+# Run all tests
+./mvnw test
+
+# Run specific test
+./mvnw test -Dtest=ProductServiceTest
 ```
+
+### Dev UI
+
+Access the Quarkus Dev UI at http://localhost:8080/q/dev
+
+## Migration Notes
+
+This application was migrated from WebLogic/JBoss EAP to Quarkus. See `MIGRATION_NOTES.md` for detailed migration information.
+
+## Architecture
+
+- **Service Layer**: CDI beans with JPA for data access
+- **REST Layer**: JAX-RS endpoints
+- **Messaging**: Reactive messaging for asynchronous order processing
+- **Database**: PostgreSQL with Flyway migrations
+- **Security**: OIDC with Keycloak
+
+## Troubleshooting
+
+### Database Connection Issues
+Ensure PostgreSQL is running and accessible. Check connection settings in `application.properties`.
+
+### Kafka Connection Issues
+Ensure Kafka is running on localhost:9092 or configure `kafka.bootstrap.servers`.
+
+### Keycloak Issues
+Ensure Keycloak is running on port 8081 and the "eap" realm is imported.
+
+## License
+
+This project is licensed under the Apache License 2.0.
