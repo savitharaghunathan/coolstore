@@ -1,0 +1,257 @@
+{
+  "metadata": {
+    "project_name": "coolstore-monolith",
+    "java_ee_version": "7.0",
+    "source_app_server": "JBoss EAP 7.4",
+    "target_runtime": "Quarkus 3",
+    "migration_date": "2026-08-12",
+    "build_tool": "maven",
+    "source_java_version": "1.8",
+    "target_java_version": "17"
+  },
+  "tech_stack": {
+    "packaging": "war",
+    "web_framework": "JAX-RS",
+    "persistence": {
+      "jpa_version": "2.1",
+      "provider": "Hibernate",
+      "database": "PostgreSQL",
+      "datasource_jndi": "java:jboss/datasources/CoolstoreDS",
+      "persistence_unit_name": "primary",
+      "entities_count": 4
+    },
+    "messaging": {
+      "provider": "JMS",
+      "topics": ["topic/orders"],
+      "message_driven_beans": [
+        {
+          "name": "OrderServiceMDB",
+          "destination": "topic/orders",
+          "type": "javax.jms.Topic"
+        },
+        {
+          "name": "InventoryNotificationMDB",
+          "type": "MessageListener"
+        }
+      ]
+    },
+    "ejb": {
+      "stateless_beans": [
+        "CatalogService",
+        "OrderService",
+        "ProductService",
+        "ShippingService",
+        "ShoppingCartOrderProcessor"
+      ],
+      "stateful_beans": [
+        "ShoppingCartService"
+      ],
+      "total_count": 6
+    },
+    "cdi": {
+      "enabled": true,
+      "bean_discovery_mode": "all"
+    },
+    "lifecycle": {
+      "weblogic_listeners": true,
+      "application_lifecycle_event": "weblogic.application.ApplicationLifecycleEvent",
+      "application_lifecycle_listener": "weblogic.application.ApplicationLifecycleListener"
+    },
+    "database_migration": {
+      "tool": "Flyway",
+      "version": "4.1.2"
+    },
+    "security": {
+      "framework": "Keycloak",
+      "version": "20.0.5"
+    },
+    "libraries": {
+      "custom_jars": [
+        {
+          "artifact": "audit-logging-library",
+          "version": "1.0.0",
+          "scope": "system",
+          "path": "lib/audit-logging-library-1.0.0.jar"
+        }
+      ]
+    }
+  },
+  "migration_decisions": {
+    "build_configuration": {
+      "convert_war_to_jar": true,
+      "target_packaging": "jar",
+      "quarkus_platform_version": "3.2.0.Final",
+      "add_quarkus_bom": true,
+      "add_quarkus_maven_plugin": true
+    },
+    "ejb_to_cdi": {
+      "convert_stateless_to_applicationscoped": true,
+      "convert_stateful_to_sessionscoped": true,
+      "remove_ejb_interfaces": true,
+      "replace_jndi_lookups": true,
+      "beans_to_convert": {
+        "CatalogService": "ApplicationScoped",
+        "OrderService": "ApplicationScoped",
+        "ProductService": "ApplicationScoped",
+        "ShippingService": "ApplicationScoped",
+        "ShoppingCartOrderProcessor": "ApplicationScoped",
+        "ShoppingCartService": "SessionScoped"
+      }
+    },
+    "messaging": {
+      "convert_to_reactive_messaging": true,
+      "messaging_provider": "smallrye-reactive-messaging",
+      "connector": "smallrye-kafka",
+      "mdb_conversions": {
+        "OrderServiceMDB": {
+          "channel": "orders",
+          "convert_to": "Incoming"
+        },
+        "InventoryNotificationMDB": {
+          "channel": "inventory-notifications",
+          "convert_to": "Incoming"
+        }
+      },
+      "topic_mappings": {
+        "topic/orders": "orders"
+      }
+    },
+    "persistence": {
+      "convert_persistence_xml": true,
+      "target_config_file": "application.properties",
+      "datasource_name": "coolstore",
+      "properties": {
+        "quarkus.datasource.db-kind": "postgresql",
+        "quarkus.datasource.username": "postgresUser",
+        "quarkus.datasource.password": "postgresPW",
+        "quarkus.datasource.jdbc.url": "jdbc:postgresql://127.0.0.1:5432/postgresDB",
+        "quarkus.hibernate-orm.database.generation": "none",
+        "quarkus.hibernate-orm.log.sql": "false",
+        "quarkus.hibernate-orm.log.format-sql": "true"
+      }
+    },
+    "lifecycle": {
+      "convert_weblogic_listeners": true,
+      "replace_with": "quarkus-lifecycle-events",
+      "listeners_to_convert": [
+        "weblogic.application.ApplicationLifecycleListener"
+      ]
+    },
+    "web_configuration": {
+      "remove_web_xml": true,
+      "remove_beans_xml": true,
+      "jsp_pages": {
+        "index.jsp": "migrate_to_template",
+        "health.jsp": "replace_with_health_endpoint"
+      }
+    },
+    "dependencies": {
+      "quarkus_extensions": [
+        "quarkus-hibernate-orm",
+        "quarkus-hibernate-orm-panache",
+        "quarkus-jdbc-postgresql",
+        "quarkus-resteasy-reactive",
+        "quarkus-resteasy-reactive-jackson",
+        "quarkus-smallrye-reactive-messaging",
+        "quarkus-smallrye-reactive-messaging-kafka",
+        "quarkus-flyway",
+        "quarkus-oidc",
+        "quarkus-arc"
+      ],
+      "remove_dependencies": [
+        "javaee-web-api",
+        "javaee-api",
+        "jboss-jms-api_2.0_spec",
+        "jboss-rmi-api_1.0_spec"
+      ]
+    },
+    "testing": {
+      "upgrade_junit": true,
+      "target_junit_version": "5",
+      "add_quarkus_test_support": true,
+      "test_extensions": [
+        "quarkus-junit5",
+        "rest-assured"
+      ]
+    },
+    "cleanup": {
+      "remove_weblogic_stubs": true,
+      "verify_no_javax_ee_imports": true,
+      "files_to_delete": [
+        "src/main/webapp/WEB-INF/web.xml",
+        "src/main/webapp/WEB-INF/beans.xml",
+        "src/main/resources/META-INF/persistence.xml",
+        "src/main/java/weblogic/**"
+      ]
+    }
+  },
+  "migration_phases": [
+    {
+      "phase": 1,
+      "name": "build-config",
+      "description": "Restructure pom.xml: WAR→JAR, add Quarkus BOM and plugin, replace Java EE dependencies with Quarkus extensions",
+      "status": "pending"
+    },
+    {
+      "phase": 2,
+      "name": "app-config",
+      "description": "Replace persistence.xml with application.properties, remove web.xml and beans.xml",
+      "status": "pending"
+    },
+    {
+      "phase": 3,
+      "name": "ejb-to-cdi",
+      "description": "Replace EJB annotations with CDI, remove Remote/Local interfaces, replace JNDI lookups with injection",
+      "status": "pending"
+    },
+    {
+      "phase": 4,
+      "name": "messaging",
+      "description": "Convert MDB classes to SmallRye Reactive Messaging, replace JMS producers with Emitter",
+      "status": "pending"
+    },
+    {
+      "phase": 5,
+      "name": "lifecycle",
+      "description": "Replace WebLogic lifecycle listeners with Quarkus startup/shutdown events",
+      "status": "pending"
+    },
+    {
+      "phase": 6,
+      "name": "cleanup",
+      "description": "Delete legacy files, remove weblogic/jboss stubs, verify no javax.* EE imports remain",
+      "status": "pending"
+    }
+  ],
+  "risks": [
+    {
+      "category": "clustering",
+      "description": "Application uses distributable sessions and JMS clustering (standalone-full-ha.xml). Quarkus clustering requires different configuration.",
+      "mitigation": "Review Quarkus clustering documentation and configure accordingly"
+    },
+    {
+      "category": "stateful_session",
+      "description": "ShoppingCartService is a stateful EJB. Session state management differs in Quarkus.",
+      "mitigation": "Convert to CDI @SessionScoped and verify session persistence works correctly"
+    },
+    {
+      "category": "custom_library",
+      "description": "Application uses system-scoped dependency (audit-logging-library-1.0.0.jar)",
+      "mitigation": "Verify library compatibility with Quarkus and consider installing to local Maven repo"
+    },
+    {
+      "category": "jsp_pages",
+      "description": "Application has JSP pages (index.jsp, health.jsp) which are not natively supported in Quarkus",
+      "mitigation": "Migrate to Qute templates or serve as static resources, replace health.jsp with Quarkus health endpoint"
+    }
+  ],
+  "notes": [
+    "KONVEYOR_PARAM_INTERACTIVE is not set, using non-interactive mode",
+    "Application currently runs on JBoss EAP 7.4 with clustering enabled",
+    "WebLogic lifecycle components detected - these need conversion",
+    "Database migration handled by Flyway - compatible with Quarkus",
+    "Keycloak integration present - will use quarkus-oidc extension",
+    "JMS topic 'topic/orders' used for order processing - convert to Kafka/AMQP with SmallRye",
+    "Source Java version is 1.8, target is Java 17 (Quarkus 3 minimum)"
+  ]
+}
