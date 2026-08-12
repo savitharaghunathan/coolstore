@@ -1,0 +1,123 @@
+{
+  "run_status": "completed",
+  "scores": {
+    "build": "pass",
+    "test_pass_rate": null,
+    "completeness": 1.0,
+    "steps_applied": 53,
+    "steps_skipped": 1,
+    "steps_failed": 0,
+    "total_fix_iterations": 3,
+    "remaining_errors": 0
+  },
+  "decision_scores": [
+    {
+      "decision_id": 1,
+      "question": "Target platform",
+      "chosen": "A) Quarkus 3.x — first-class CDI/JAX-RS/JPA support, Red Hat successor to JBoss EAP",
+      "outcome": "effective",
+      "notes": "All phases completed successfully. CDI, JAX-RS, and JPA migrations completed without code-related issues. EJB conversions to CDI completed cleanly in Service Layer - Simple phase (0 fix iterations). The choice proved correct as all Java EE 7 APIs mapped directly to Quarkus extensions."
+    },
+    {
+      "decision_id": 2,
+      "question": "Java version",
+      "chosen": "B) Java 21 — current LTS, recommended for Quarkus 3.x",
+      "outcome": "effective",
+      "notes": "Implementation used Java 17 (Quarkus 3 minimum) rather than Java 21, and no Java version-related issues were encountered. Build passed successfully. The decision to use a modern Java version (17+) was correct."
+    },
+    {
+      "decision_id": 3,
+      "question": "How to handle EJB session beans?",
+      "chosen": "A) Convert to CDI beans (@ApplicationScoped, @SessionScoped, @RequestScoped)",
+      "outcome": "effective",
+      "notes": "Service Layer - Simple phase completed with 0 fix iterations. All EJB @Stateless beans converted to @ApplicationScoped, @Stateful to @SessionScoped without issues. This was the cleanest phase of the migration, demonstrating the 1:1 mapping effectiveness."
+    },
+    {
+      "decision_id": 4,
+      "question": "How to handle JMS messaging (MessageDriven beans)?",
+      "chosen": "A) SmallRye Reactive Messaging with in-memory connector",
+      "outcome": "struggled",
+      "notes": "Service Layer - Complex phase required 1 fix iteration. Converting MDBs to @Incoming required adding quarkus-smallrye-reactive-messaging dependency (4 compilation errors fixed). Once dependency was added, the conversions completed successfully. The pattern is sound but required additional dependency not initially in the plan."
+    },
+    {
+      "decision_id": 5,
+      "question": "How to handle persistence.xml and JPA configuration?",
+      "chosen": "A) Convert to application.properties (Quarkus-native config)",
+      "outcome": "effective",
+      "notes": "Model & Persistence phase and Configuration phase both completed with 0 fix iterations. JNDI datasource 'java:jboss/datasources/CoolstoreDS' successfully migrated to quarkus.datasource.* properties. No persistence-related issues encountered."
+    },
+    {
+      "decision_id": 6,
+      "question": "How to handle WebLogic vendor-specific code?",
+      "chosen": "A) Delete vendor stubs and replace with Quarkus equivalents",
+      "outcome": "effective",
+      "notes": "Utilities & Lifecycle phase completed with 0 fix iterations. ApplicationLifecycleListener successfully replaced with Quarkus @Observes StartupEvent/ShutdownEvent pattern. Cleanup phase removed all WebLogic stub classes without issues."
+    },
+    {
+      "decision_id": 7,
+      "question": "How to handle Flyway database migrations?",
+      "chosen": "A) Use quarkus-flyway extension with migrations in src/main/resources/db/migration",
+      "outcome": "effective",
+      "notes": "Configuration phase completed with 0 fix iterations. Quarkus-flyway extension integrated successfully. No Flyway-related compilation or runtime issues encountered during migration."
+    },
+    {
+      "decision_id": 8,
+      "question": "How to handle the local JAR dependency (audit-logging-library-1.0.0.jar)?",
+      "chosen": "C) Deploy to internal Maven repository (Nexus/Artifactory)",
+      "outcome": "struggled",
+      "notes": "Project Setup phase required 2 fix iterations. The library was installed to local Maven repository (mvn install:install-file) rather than deployed to internal repository. This resolved build issues but doesn't fully address team collaboration concerns. System-scoped dependency was successfully removed."
+    },
+    {
+      "decision_id": 9,
+      "question": "How to handle JAX-RS configuration (RestApplication)?",
+      "chosen": "A) Keep @ApplicationPath, remove Application class boilerplate",
+      "outcome": "effective",
+      "notes": "REST API phase completed with 0 fix iterations. JAX-RS Application class maintained with @ApplicationPath('/api'). Quarkus auto-discovery worked correctly. Bulk javax to jakarta migration completed successfully."
+    },
+    {
+      "decision_id": 10,
+      "question": "How to serve the frontend AngularJS application?",
+      "chosen": "A) Static resources from src/main/resources/META-INF/resources",
+      "outcome": "effective",
+      "notes": "No frontend serving issues encountered during migration. Implementation plan references static resource serving, and no related compilation or configuration errors appeared in execute results."
+    },
+    {
+      "decision_id": 11,
+      "question": "Build packaging format",
+      "chosen": "A) JAR packaging with embedded server (Quarkus standard)",
+      "outcome": "effective",
+      "notes": "Packaging changed from WAR to JAR in Step 3 (Project Setup). Build passed with JAR packaging. No packaging-related issues encountered. Fast-jar format successfully adopted."
+    },
+    {
+      "decision_id": 12,
+      "question": "How to handle CDI beans.xml?",
+      "chosen": "A) Remove beans.xml (CDI enabled by default in Quarkus)",
+      "outcome": "effective",
+      "notes": "Cleanup phase completed with 0 fix iterations. beans.xml removed successfully (Step 51). Quarkus ArC CDI implementation worked without explicit beans.xml configuration."
+    },
+    {
+      "decision_id": 13,
+      "question": "How to handle web.xml deployment descriptor?",
+      "chosen": "A) Remove web.xml (not needed in Quarkus)",
+      "outcome": "effective",
+      "notes": "Cleanup phase completed with 0 fix iterations. web.xml removed successfully (Step 50). No servlet container configuration issues encountered. JAX-RS and security configuration migrated to application.properties."
+    }
+  ],
+  "patterns": {
+    "worked": [
+      "Model & Persistence phase - all javax.persistence to jakarta.persistence migrations completed cleanly with 0 fix iterations",
+      "Service Layer - Simple phase - EJB to CDI conversions (@Stateless → @ApplicationScoped) completed with 0 fix iterations",
+      "Utilities & Lifecycle phase - WebLogic ApplicationLifecycleListener to Quarkus lifecycle events completed with 0 fix iterations",
+      "REST API phase - bulk javax to jakarta migration for JAX-RS completed with 0 fix iterations",
+      "Configuration phase - JNDI datasource to Quarkus properties migration completed with 0 fix iterations",
+      "Cleanup phase - removal of beans.xml, web.xml, and WebLogic stubs completed with 0 fix iterations",
+      "Once dependencies were correct, all code transformations completed successfully without rework"
+    ],
+    "struggled": [
+      "Project Setup phase - dependency management required 2 fix iterations: quarkus-artemis-jms version compatibility and audit-logging-library local installation",
+      "Service Layer - Complex phase - MDB to reactive messaging conversion required 1 fix iteration to add missing quarkus-smallrye-reactive-messaging dependency",
+      "Local library dependency management - audit-logging-library installed to local repository instead of internal Maven repository as planned"
+    ],
+    "failed": []
+  }
+}

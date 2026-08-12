@@ -1,0 +1,170 @@
+{
+  "detection": {
+    "language": "java",
+    "version": "1.8",
+    "frameworks": [
+      "java-ee-7",
+      "ejb-3.1",
+      "jms-2.0",
+      "jpa-2.1",
+      "jax-rs-2.0",
+      "cdi-1.1",
+      "json-p-1.0",
+      "flyway-4.1.2"
+    ],
+    "build_tool": "maven",
+    "app_server": "jboss-eap",
+    "source_file_count": 27
+  },
+  "decisions": [
+    {
+      "id": 1,
+      "question": "Target platform",
+      "options": [
+        "A) Quarkus 3.x — first-class CDI/JAX-RS/JPA support, Red Hat successor to JBoss EAP",
+        "B) Spring Boot 3.x — requires rewriting CDI to Spring, JAX-RS to Spring MVC",
+        "C) Jakarta EE 10 on WildFly — minimal code changes, same app server model"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "Application uses CDI, JAX-RS, JPA, and EJB which all map 1:1 to Quarkus extensions. Quarkus is the natural Red Hat successor platform with cloud-native capabilities. Spring Boot would require extensive rewrites, and WildFly maintains the traditional app server model."
+    },
+    {
+      "id": 2,
+      "question": "Java version",
+      "options": [
+        "A) Java 17 — Quarkus 3.x minimum requirement",
+        "B) Java 21 — current LTS, recommended for Quarkus 3.x"
+      ],
+      "recommendation": "B",
+      "chosen": "B",
+      "reasoning": "Java 21 is the current LTS version and provides the best long-term support. Quarkus 3.x requires minimum Java 17, but recommends Java 21 for optimal performance and features."
+    },
+    {
+      "id": 3,
+      "question": "How to handle EJB session beans?",
+      "options": [
+        "A) Convert to CDI beans (@ApplicationScoped, @SessionScoped, @RequestScoped)",
+        "B) Use quarkus-ejb compatibility extension"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "CDI is Quarkus-native and provides direct mappings: @Stateless → @ApplicationScoped, @Stateful → @SessionScoped, @Singleton → @ApplicationScoped with @Startup. Converting to CDI eliminates compatibility layers and aligns with Quarkus best practices."
+    },
+    {
+      "id": 4,
+      "question": "How to handle JMS messaging (MessageDriven beans)?",
+      "options": [
+        "A) SmallRye Reactive Messaging with in-memory connector",
+        "B) Qpid JMS client (keeps JMS API)",
+        "C) Apache Artemis embedded broker"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "The original application used JBoss embedded messaging (HornetQ). SmallRye Reactive Messaging with smallrye-in-memory connector preserves in-process message flow without requiring external infrastructure, maintaining the same deployment model while modernizing to reactive patterns."
+    },
+    {
+      "id": 5,
+      "question": "How to handle persistence.xml and JPA configuration?",
+      "options": [
+        "A) Convert to application.properties (Quarkus-native config)",
+        "B) Keep persistence.xml as-is"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "Quarkus configures JPA through application.properties. The JNDI datasource 'java:jboss/datasources/CoolstoreDS' becomes 'quarkus.datasource.*' properties. This centralizes configuration, enables Quarkus dev services for automatic database provisioning, and removes JNDI dependencies."
+    },
+    {
+      "id": 6,
+      "question": "How to handle WebLogic vendor-specific code?",
+      "options": [
+        "A) Delete vendor stubs and replace with Quarkus equivalents",
+        "B) Keep as compatibility stubs"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "The weblogic.application package contains stub implementations with no actual functionality. ApplicationLifecycleListener should be replaced with Quarkus lifecycle events (@Observes StartupEvent, @Observes ShutdownEvent). Removing vendor code eliminates unnecessary dependencies."
+    },
+    {
+      "id": 7,
+      "question": "How to handle Flyway database migrations?",
+      "options": [
+        "A) Use quarkus-flyway extension with migrations in src/main/resources/db/migration",
+        "B) Keep manual Flyway initialization"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "Quarkus provides native Flyway integration via quarkus-flyway extension. Migration scripts are already in the standard location (db/migration). The extension handles initialization automatically, eliminating the need for manual Flyway startup code."
+    },
+    {
+      "id": 8,
+      "question": "How to handle the local JAR dependency (audit-logging-library-1.0.0.jar)?",
+      "options": [
+        "A) Install to local Maven repository and use standard dependency",
+        "B) Keep as system-scoped dependency",
+        "C) Deploy to internal Maven repository (Nexus/Artifactory)"
+      ],
+      "recommendation": "C",
+      "chosen": "C",
+      "reasoning": "System-scoped dependencies are problematic for CI/CD and team collaboration. Deploying to an internal Maven repository (option C) is the enterprise best practice. If unavailable, option A (local repository install) is acceptable for development. This ensures reproducible builds."
+    },
+    {
+      "id": 9,
+      "question": "How to handle JAX-RS configuration (RestApplication)?",
+      "options": [
+        "A) Keep @ApplicationPath, remove Application class boilerplate",
+        "B) Use quarkus.resteasy.path property in application.properties"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "Quarkus automatically discovers JAX-RS resources without requiring an Application class. However, keeping @ApplicationPath maintains the same REST endpoint path structure. The empty Application class can remain minimal or use quarkus.resteasy.path if preferred."
+    },
+    {
+      "id": 10,
+      "question": "How to serve the frontend AngularJS application?",
+      "options": [
+        "A) Static resources from src/main/resources/META-INF/resources",
+        "B) Qute template serving index.html via JAX-RS resource",
+        "C) Separate frontend build with dedicated web server"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "The AngularJS frontend can be served as static resources from META-INF/resources, which Quarkus serves automatically. This is simpler than a JAX-RS endpoint and maintains separation of concerns. The webapp directory content should be moved to META-INF/resources during migration."
+    },
+    {
+      "id": 11,
+      "question": "Build packaging format",
+      "options": [
+        "A) JAR packaging with embedded server (Quarkus standard)",
+        "B) WAR packaging for external container",
+        "C) Native executable with GraalVM"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "Quarkus standard packaging is JAR with embedded server, optimized for containers and cloud deployment. This eliminates the need for external application servers. Native executable (option C) is valuable for production but JAR is better for initial migration and development."
+    },
+    {
+      "id": 12,
+      "question": "How to handle CDI beans.xml?",
+      "options": [
+        "A) Remove beans.xml (CDI enabled by default in Quarkus)",
+        "B) Keep beans.xml for explicit CDI configuration"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "Quarkus enables CDI by default with ArC (build-time CDI implementation). The beans.xml file is not required unless specific CDI interceptors or decorators need configuration. Removing it simplifies the project structure."
+    },
+    {
+      "id": 13,
+      "question": "How to handle web.xml deployment descriptor?",
+      "options": [
+        "A) Remove web.xml (not needed in Quarkus)",
+        "B) Convert web.xml settings to application.properties"
+      ],
+      "recommendation": "A",
+      "chosen": "A",
+      "reasoning": "Quarkus does not use web.xml as it's not a traditional servlet container. JAX-RS configuration is handled via annotations and application.properties. Security and session settings should be migrated to Quarkus-specific configuration properties."
+    }
+  ],
+  "mode": "non-interactive"
+}
