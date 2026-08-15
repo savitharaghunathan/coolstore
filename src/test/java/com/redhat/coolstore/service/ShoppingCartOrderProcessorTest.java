@@ -3,19 +3,19 @@ package com.redhat.coolstore.service;
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.jms.JMSContext;
-import javax.jms.JMSProducer;
-import javax.jms.Topic;
+import jakarta.jms.JMSContext;
+import jakarta.jms.JMSProducer;
+import jakarta.jms.Topic;
 import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class ShoppingCartOrderProcessorTest {
@@ -35,7 +35,7 @@ public class ShoppingCartOrderProcessorTest {
     @InjectMocks
     private ShoppingCartOrderProcessor processor;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         MockitoAnnotations.initMocks(this);
         when(context.createProducer()).thenReturn(producer);
