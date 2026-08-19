@@ -1,0 +1,55 @@
+File	Type	Category	Status	Notes
+src/main/java/com/redhat/coolstore/model/CatalogItemEntity.java	Source	Entity	TODO	JPA @Entity - update imports javax.persistence → jakarta.persistence
+src/main/java/com/redhat/coolstore/model/InventoryEntity.java	Source	Entity	TODO	JPA @Entity - update imports
+src/main/java/com/redhat/coolstore/model/Order.java	Source	Model	TODO	@Entity, no EJB dependencies
+src/main/java/com/redhat/coolstore/model/OrderItem.java	Source	Model	TODO	Plain model class
+src/main/java/com/redhat/coolstore/model/Product.java	Source	Model	TODO	Plain model class
+src/main/java/com/redhat/coolstore/model/Promotion.java	Source	Model	TODO	Plain model class
+src/main/java/com/redhat/coolstore/model/ShoppingCart.java	Source	Model	TODO	Plain model class (used in messaging)
+src/main/java/com/redhat/coolstore/model/ShoppingCartItem.java	Source	Model	TODO	Plain model class
+src/main/java/com/redhat/coolstore/persistence/Resources.java	Source	Config	TODO	Producer beans - update @Produces methods
+src/main/java/com/redhat/coolstore/rest/CartEndpoint.java	Source	REST	TODO	JAX-RS endpoint - update javax.ws.rs → jakarta.ws.rs
+src/main/java/com/redhat/coolstore/rest/OrderEndpoint.java	Source	REST	TODO	JAX-RS endpoint
+src/main/java/com/redhat/coolstore/rest/ProductEndpoint.java	Source	REST	TODO	JAX-RS endpoint
+src/main/java/com/redhat/coolstore/rest/RestApplication.java	Source	Config	TODO	@ApplicationPath - update imports
+src/main/java/com/redhat/coolstore/service/CatalogService.java	Source	Service	TODO	@Stateless → @ApplicationScoped
+src/main/java/com/redhat/coolstore/service/InventoryNotificationMDB.java	Source	Messaging	CRITICAL	@MessageDriven → @Incoming method (SmallRye)
+src/main/java/com/redhat/coolstore/service/OrderService.java	Source	Service	TODO	@Stateless → @ApplicationScoped
+src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java	Source	Messaging	CRITICAL	@MessageDriven → @Incoming method (SmallRye)
+src/main/java/com/redhat/coolstore/service/ProductService.java	Source	Service	TODO	@Stateless → @ApplicationScoped
+src/main/java/com/redhat/coolstore/service/PromoService.java	Source	Service	TODO	@Stateless → @ApplicationScoped
+src/main/java/com/redhat/coolstore/service/ShippingService.java	Source	Service	TODO	@Stateless → @ApplicationScoped
+src/main/java/com/redhat/coolstore/service/ShippingServiceRemote.java	Source	Service	TODO	Remote EJB interface - evaluate if needed in Quarkus
+src/main/java/com/redhat/coolstore/service/ShoppingCartOrderProcessor.java	Source	Messaging	CRITICAL	@Stateless producer → @ApplicationScoped with @Channel/@Emitter
+src/main/java/com/redhat/coolstore/service/ShoppingCartService.java	Source	Service	TODO	@Stateful → @SessionScoped or convert to stateless
+src/main/java/com/redhat/coolstore/utils/DataBaseMigrationStartup.java	Source	Util	TODO	@Startup → Quarkus @Startup or ApplicationScoped constructor
+src/main/java/com/redhat/coolstore/utils/Producers.java	Source	Config	TODO	Producer methods - update imports
+src/main/java/com/redhat/coolstore/utils/StartupListener.java	Source	Util	TODO	Lifecycle listener - use Quarkus events
+src/main/java/com/redhat/coolstore/utils/Transformers.java	Source	Util	SAFE	Utility class - minimal changes needed
+src/main/java/weblogic/application/ApplicationLifecycleEvent.java	Source	Compat	TODO	WebLogic compatibility - delete or replace with Quarkus equivalent
+src/main/java/weblogic/application/ApplicationLifecycleListener.java	Source	Compat	TODO	WebLogic compatibility - delete or replace
+src/main/java/weblogic/i18n/logging/NonCatalogLogger.java	Source	Compat	TODO	WebLogic logging - replace with SLF4J
+src/test/java/com/redhat/coolstore/model/CatalogItemEntityTest.java	Test	Unit	TODO	Update to JUnit 5, add Quarkus test setup if needed
+src/test/java/com/redhat/coolstore/model/InventoryEntityTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/model/OrderItemTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/model/OrderTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/model/ProductTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/model/PromotionTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/model/ShoppingCartItemTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/model/ShoppingCartTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/rest/CartEndpointTest.java	Test	Integration	TODO	Update to @QuarkusTest, SmallRye messaging setup
+src/test/java/com/redhat/coolstore/rest/OrderEndpointTest.java	Test	Integration	TODO	Update to @QuarkusTest
+src/test/java/com/redhat/coolstore/rest/ProductEndpointTest.java	Test	Integration	TODO	Update to @QuarkusTest
+src/test/java/com/redhat/coolstore/service/CatalogServiceTest.java	Test	Unit	TODO	Update to JUnit 5, @QuarkusTest
+src/test/java/com/redhat/coolstore/service/OrderServiceMDBTest.java	Test	Unit	CRITICAL	JMS mocks → SmallRye messaging mocks
+src/test/java/com/redhat/coolstore/service/OrderServiceTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/service/ProductServiceTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/service/PromoServiceTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/service/ShippingServiceTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/service/ShoppingCartOrderProcessorTest.java	Test	Unit	CRITICAL	JMS mocks → SmallRye @Channel mocks
+src/test/java/com/redhat/coolstore/service/ShoppingCartServiceTest.java	Test	Unit	TODO	Update to JUnit 5, stateless conversion
+src/test/java/com/redhat/coolstore/utils/ProducersTest.java	Test	Unit	TODO	Update to JUnit 5
+src/test/java/com/redhat/coolstore/utils/TransformersTest.java	Test	Unit	TODO	Update to JUnit 5
+pom.xml	Config	Build	TODO	Update parent to Quarkus BOM, add quarkus-* extensions
+src/main/resources/META-INF/persistence.xml	Config	Persistence	DELETE	Config moves to application.properties
+src/main/webapp/WEB-INF/web.xml	Config	Web	DELETE	Config moves to application.properties
