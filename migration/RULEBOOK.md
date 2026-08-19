@@ -243,4 +243,12 @@ mp.messaging.incoming.orders.value.deserializer=org.apache.kafka.common.serializ
 - Amendment 1: Pattern 1B updated with @Transactional + transaction model explanation
 - Amendment 2: Kafka chosen as SmallRye Reactive Messaging connector; configuration documented
 
-**Process**: Step 2 re-round scheduled to validate amended rulebook before Step 3 fan-out.
+**Step 2 Re-round**: 2026-08-19 16:30Z ✅ COMPLETE
+- Fresh files selected: OrderService.java, CatalogService.java, InventoryNotificationMDB.java
+- Amendment 1 (@Transactional): VALIDATED — correctly applied, no TransactionRequiredException risk
+- Amendment 2 (Kafka): VALIDATED — Kafka configuration explicit, no ambiguity
+- Pilot run adherence: 95% (up from 82% in initial pilot)
+- See migration/stress-test/report-reround.md for full findings
+- **Status**: READY FOR STEP 3 FAN-OUT
+
+**Process**: Step 2 complete. Proceed to Step 3 (Translate All 51 Files).

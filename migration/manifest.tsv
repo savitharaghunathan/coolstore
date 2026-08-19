@@ -1,0 +1,56 @@
+file	type	status	implementer	reviewer1	reviewer2	fixer	translated
+src/main/java/com/redhat/coolstore/model/CatalogItemEntity.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/model/InventoryEntity.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/model/Order.java	Source	PILOTED	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/model/OrderItem.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/model/Product.java	Source	DONE	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/model/Promotion.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/model/ShoppingCart.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/model/ShoppingCartItem.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/persistence/Resources.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/rest/CartEndpoint.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/rest/OrderEndpoint.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/rest/ProductEndpoint.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/rest/RestApplication.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/service/CatalogService.java	Source	REROUND	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/service/InventoryNotificationMDB.java	Source	REROUND	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/service/OrderService.java	Source	REROUND	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java	Source	PILOTED	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/service/ProductService.java	Source	DONE	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/service/PromoService.java	Source	DONE	DONE	TBD	TBD	TBD	YES
+src/main/java/com/redhat/coolstore/service/ShippingService.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/service/ShippingServiceRemote.java	Source	DONE	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/service/ShoppingCartOrderProcessor.java	Source	PILOTED	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/service/ShoppingCartService.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/utils/DataBaseMigrationStartup.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/com/redhat/coolstore/utils/Producers.java	Source	DONE	DONE	DONE	DONE	DONE	YES
+src/main/java/com/redhat/coolstore/utils/StartupListener.java	Source	DONE	DONE	TBD	TBD	TBD	YES
+src/main/java/com/redhat/coolstore/utils/Transformers.java	Source	TODO	TBD	TBD	TBD	TBD
+src/main/java/weblogic/application/ApplicationLifecycleEvent.java	Source	DONE	DONE	DONE	DONE	DONE	YES
+src/main/java/weblogic/application/ApplicationLifecycleListener.java	Source	DONE	DONE	DONE	DONE	DONE	YES
+src/main/java/weblogic/i18n/logging/NonCatalogLogger.java	Source	DONE	DONE	DONE	DONE	DONE	YES
+src/test/java/com/redhat/coolstore/model/CatalogItemEntityTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/model/InventoryEntityTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/model/OrderItemTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/model/OrderTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/model/ProductTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/model/PromotionTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/model/ShoppingCartItemTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/model/ShoppingCartTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/rest/CartEndpointTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/rest/OrderEndpointTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/rest/ProductEndpointTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/service/CatalogServiceTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/service/OrderServiceMDBTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/service/OrderServiceTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/service/ProductServiceTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/service/PromoServiceTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/service/ShippingServiceTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/service/ShoppingCartOrderProcessorTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/service/ShoppingCartServiceTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/utils/ProducersTest.java	Test	TODO	TBD	TBD	TBD	TBD
+src/test/java/com/redhat/coolstore/utils/TransformersTest.java	Test	TODO	TBD	TBD	TBD	TBD
+pom.xml	Config	TODO	TBD	TBD	TBD	TBD
+src/main/resources/application.properties	Config	TODO	TBD	TBD	TBD	TBD
+src/main/webapp/WEB-INF/web.xml	Config	DELETE	N/A	N/A	N/A	N/A	YES
+src/main/resources/META-INF/persistence.xml	Config	DELETE	N/A	N/A	N/A	N/A	YES

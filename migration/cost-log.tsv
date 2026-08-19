@@ -1,2 +1,4 @@
 step	timestamp	wall_clock_min	tokens	subagents	model
 2	2026-08-19T16:04Z	4.6	88088	6	haiku/sonnet
+2-reround	2026-08-19T16:30Z	8.8	166217	6	haiku/sonnet
+3	2026-08-19T17:15Z	0.5	2840	0	haiku

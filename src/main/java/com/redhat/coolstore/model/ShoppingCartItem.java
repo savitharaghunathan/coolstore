@@ -3,18 +3,18 @@ package com.redhat.coolstore.model;
 import java.io.Serializable;
 
 public class ShoppingCartItem implements Serializable {
-	
+
 	private static final long serialVersionUID = 6964558044240061049L;
 
 	private double price;
 	private int quantity;
 	private double promoSavings;
 	private Product product;
-	
+
 	public ShoppingCartItem() {
-		
+
 	}
-	
+
 	public double getPrice() {
 		return price;
 	}
@@ -53,12 +53,12 @@ public class ShoppingCartItem implements Serializable {
 				+ ", promoSavings=" + promoSavings + ", product=" + product
 				+ "]";
 	}
-		
+
 	public OrderItem toOrderItem() {
 		OrderItem oi = new OrderItem();
 		oi.setQuantity(this.getQuantity());
 		oi.setProductId(this.product.getItemId());
 		return oi;
 	}
-	
+
 }

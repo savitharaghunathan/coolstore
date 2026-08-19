@@ -4,9 +4,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.enterprise.context.Dependent;
+import jakarta.enterprise.context.ApplicationScoped;
 
-@Dependent
+@ApplicationScoped
 public class ShoppingCart implements Serializable {
 
 	private static final long serialVersionUID = -1108043957592113528L;
@@ -14,19 +14,19 @@ public class ShoppingCart implements Serializable {
 	private double cartItemTotal;
 
 	private double cartItemPromoSavings;
-	
+
 	private double shippingTotal;
-	
+
 	private double shippingPromoSavings;
-	
+
 	private double cartTotal;
-			
+
 	private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<ShoppingCartItem>();
 
 	public ShoppingCart() {
-		
+
 	}
-	
+
 	public List<ShoppingCartItem> getShoppingCartItemList() {
 		return shoppingCartItemList;
 	}
@@ -40,27 +40,27 @@ public class ShoppingCart implements Serializable {
 	}
 
 	public void addShoppingCartItem(ShoppingCartItem sci) {
-		
+
 		if ( sci != null ) {
-			
+
 			shoppingCartItemList.add(sci);
-			
+
 		}
-		
+
 	}
-	
+
 	public boolean removeShoppingCartItem(ShoppingCartItem sci) {
-		
+
 		boolean removed = false;
-		
+
 		if ( sci != null ) {
-			
+
 			removed = shoppingCartItemList.remove(sci);
-			
+
 		}
-		
+
 		return removed;
-		
+
 	}
 
 	public double getCartItemTotal() {

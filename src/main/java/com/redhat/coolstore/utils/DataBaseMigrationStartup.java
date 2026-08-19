@@ -2,52 +2,40 @@ package com.redhat.coolstore.utils;
 
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
-import javax.inject.Inject;
-import javax.sql.DataSource;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.quarkus.runtime.StartupEvent;
+import jakarta.annotation.Resource;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
+import jakarta.sql.DataSource;
 
 /**
  * Created by tqvarnst on 2017-04-04.
+ * Migrated from @Singleton @Startup (EJB) to @ApplicationScoped with Quarkus @StartupEvent listener
  */
-@Singleton
-@Startup
-@TransactionManagement(TransactionManagementType.BEAN)
+@ApplicationScoped
 public class DataBaseMigrationStartup {
 
-    @Inject
-    Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(DataBaseMigrationStartup.class);
 
-    @Resource(mappedName = "java:jboss/datasources/CoolstoreDS")
+    @Inject
+    Flyway flyway;
+
+    @Resource(lookup = "java:jboss/datasources/CoolstoreDS")
     DataSource dataSource;
 
-    @PostConstruct
-    private void startup() {
-
-
+    void startup(@Observes StartupEvent ev) {
         try {
             logger.info("Initializing/migrating the database using FlyWay");
-            Flyway flyway = new Flyway();
-            flyway.setDataSource(dataSource);
             flyway.baseline();
             // Start the db.migration
             flyway.migrate();
         } catch (FlywayException e) {
-            if(logger !=null)
-                logger.log(Level.SEVERE,"FAILED TO INITIALIZE THE DATABASE: " + e.getMessage(),e);
-            else
-                System.out.println("FAILED TO INITIALIZE THE DATABASE: " + e.getMessage() + " and injection of logger doesn't work");
-
+            logger.error("FAILED TO INITIALIZE THE DATABASE: {}", e.getMessage(), e);
         }
     }
-
-
 
 }

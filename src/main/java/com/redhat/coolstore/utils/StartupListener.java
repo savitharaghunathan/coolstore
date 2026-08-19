@@ -1,23 +1,22 @@
 package com.redhat.coolstore.utils;
 
-import weblogic.application.ApplicationLifecycleEvent;
-import weblogic.application.ApplicationLifecycleListener;
+import io.quarkus.runtime.StartupEvent;
+import io.quarkus.runtime.ShutdownEvent;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Singleton;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import java.util.logging.Logger;
+@Singleton
+public class StartupListener {
 
-public class StartupListener extends ApplicationLifecycleListener {
+    private static final Logger log = LoggerFactory.getLogger(StartupListener.class);
 
-    @Inject
-    Logger log;
-
-    @Override
-    public void postStart(ApplicationLifecycleEvent evt) {
+    public void onStart(@Observes StartupEvent evt) {
         log.info("AppListener(postStart)");
     }
 
-    @Override
-    public void preStop(ApplicationLifecycleEvent evt) {
+    public void onStop(@Observes ShutdownEvent evt) {
         log.info("AppListener(preStop)");
     }
 
