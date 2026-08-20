@@ -14,7 +14,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 @Table(name = "INVENTORY", uniqueConstraints = @UniqueConstraint(columnNames = "itemId"))
 public class InventoryEntity implements Serializable {
 
-	private static final long serialVersionUID = 7526472295622776147L; 
+	private static final long serialVersionUID = 7526472295622776147L;
 
     @Id
     private String itemId;
@@ -69,6 +69,6 @@ public class InventoryEntity implements Serializable {
 
 	@Override
     public String toString() {
-        return "InventoryEntity [itemId=" + itemId + ", availability=" + quantity + "/" + location + " link=" + link + "]";
+        return "InventoryEntity [itemId=" + itemId + ", quantity=" + quantity + "/" + location + " link=" + link + "]";
     }
 }

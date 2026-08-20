@@ -6,11 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.quarkus.runtime.StartupEvent;
-import jakarta.annotation.Resource;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-import jakarta.sql.DataSource;
 
 /**
  * Created by tqvarnst on 2017-04-04.
@@ -19,23 +17,18 @@ import jakarta.sql.DataSource;
 @ApplicationScoped
 public class DataBaseMigrationStartup {
 
-    private static final Logger logger = LoggerFactory.getLogger(DataBaseMigrationStartup.class);
+    private static final Logger log = LoggerFactory.getLogger(DataBaseMigrationStartup.class);
 
     @Inject
     Flyway flyway;
 
-    @Resource(lookup = "java:jboss/datasources/CoolstoreDS")
-    DataSource dataSource;
-
-    void startup(@Observes StartupEvent ev) {
-        try {
-            logger.info("Initializing/migrating the database using FlyWay");
-            flyway.baseline();
-            // Start the db.migration
-            flyway.migrate();
-        } catch (FlywayException e) {
-            logger.error("FAILED TO INITIALIZE THE DATABASE: {}", e.getMessage(), e);
+    void startup(@Observes StartupEvent ev) throws FlywayException {
+        if (log != null) {
+            log.info("Initializing/migrating the database using FlyWay");
         }
+        flyway.baseline();
+        // Start the db.migration
+        flyway.migrate();
     }
 
 }

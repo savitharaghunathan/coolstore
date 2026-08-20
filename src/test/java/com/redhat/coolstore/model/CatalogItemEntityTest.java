@@ -1,31 +1,29 @@
 package com.redhat.coolstore.model;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Test;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.Assert.*;
-
+/**
+ * CatalogItemEntity test - Quarkus port of Java EE 7 test.
+ *
+ * CHANGES FROM ORIGINAL:
+ * - JUnit 4 (@Before/@After/@Test) → JUnit 5 (@Test)
+ * - Removed manual EntityManagerFactory/Persistence.createEntityManagerFactory()
+ *   Quarkus auto-injects EntityManager via @PersistenceContext
+ * - Transactions: Test methods use @Transactional for demarcation
+ * - Schema initialization handled by Quarkus Hibernate ORM auto-configuration
+ * - javax.persistence → jakarta.persistence
+ */
+@QuarkusTest
 public class CatalogItemEntityTest {
 
-    private EntityManagerFactory emf;
+    @PersistenceContext
     private EntityManager em;
-
-    @Before
-    public void setUp() {
-        emf = Persistence.createEntityManagerFactory("primary");
-        em = emf.createEntityManager();
-    }
-
-    @After
-    public void tearDown() {
-        if (em != null && em.isOpen()) em.close();
-        if (emf != null && emf.isOpen()) emf.close();
-    }
 
     @Test
     public void testFieldMapping() {
@@ -42,6 +40,7 @@ public class CatalogItemEntityTest {
     }
 
     @Test
+    @Transactional
     public void testJpaRoundTrip() {
         CatalogItemEntity item = new CatalogItemEntity();
         item.setItemId("100001");
@@ -49,9 +48,9 @@ public class CatalogItemEntityTest {
         item.setDesc("Description");
         item.setPrice(9.99);
 
-        em.getTransaction().begin();
+        // @Transactional (jakarta.transaction.Transactional) wraps entire test method; no need for em.getTransaction().begin()/commit()
         em.persist(item);
-        em.getTransaction().commit();
+        em.flush();  // Explicit flush to ensure persistence before clear
         em.clear();
 
         CatalogItemEntity found = em.find(CatalogItemEntity.class, "100001");
@@ -62,6 +61,7 @@ public class CatalogItemEntityTest {
     }
 
     @Test
+    @Transactional
     public void testOneToOneWithInventory() {
         InventoryEntity inv = new InventoryEntity();
         inv.setItemId("200001");
@@ -76,9 +76,9 @@ public class CatalogItemEntityTest {
         item.setPrice(15.00);
         item.setInventory(inv);
 
-        em.getTransaction().begin();
+        // @Transactional (jakarta.transaction.Transactional) wraps entire test method
         em.persist(item);
-        em.getTransaction().commit();
+        em.flush();  // Explicit flush to ensure persistence before clear
         em.clear();
 
         CatalogItemEntity found = em.find(CatalogItemEntity.class, "200001");
@@ -88,6 +88,7 @@ public class CatalogItemEntityTest {
     }
 
     @Test
+    @Transactional
     public void testNullInventory() {
         CatalogItemEntity item = new CatalogItemEntity();
         item.setItemId("300001");
@@ -95,9 +96,9 @@ public class CatalogItemEntityTest {
         item.setDesc("Missing inventory");
         item.setPrice(5.00);
 
-        em.getTransaction().begin();
+        // @Transactional (jakarta.transaction.Transactional) wraps entire test method
         em.persist(item);
-        em.getTransaction().commit();
+        em.flush();  // Explicit flush to ensure persistence before clear
         em.clear();
 
         CatalogItemEntity found = em.find(CatalogItemEntity.class, "300001");

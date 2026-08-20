@@ -4,32 +4,32 @@ import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.utils.Transformers;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.Startup;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-import jakarta.jms.JMSException;
-import jakarta.jms.Message;
-import jakarta.jms.MessageListener;
-import jakarta.jms.TextMessage;
+import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
+import org.eclipse.microprofile.reactive.messaging.Message;
 import java.util.Optional;
 
 /**
- * Native Quarkus port of InventoryNotificationMDB.
+ * Quarkus reactive messaging consumer for inventory notifications.
  *
- * Changes from EJB MDB to Quarkus-native approach:
- * - Removed WebLogic-specific JNDI/TopicConnection setup; uses Quarkus JMS configuration.
- * - Replaced @Stateless + manual init() with @Singleton for managed lifecycle.
+ * Changes from EJB MDB to Quarkus Reactive Messaging:
+ * - Replaced @MessageDriven with @ApplicationScoped for reactive context.
+ * - Removed JMS MessageListener interface; uses SmallRye Reactive Messaging @Incoming.
+ * - Uses @Transactional to wrap message processing for database consistency.
  * - Uses Quarkus ConfigProperty for external configuration (threshold, logging).
- * - Removed boilerplate JNDI context creation; configured via application.properties.
- * - Integrated Quarkus logging instead of System.out/err.
+ * - Integrated Quarkus logging (Log) instead of System.out/err.
  *
  * Configuration required in application.properties:
- *   quarkus.jms.url=tcp://localhost:61616
+ *   quarkus.kafka.bootstrap.servers=localhost:9092
+ *   mp.messaging.incoming.inventory-updates.connector=smallrye-kafka
  *   inventory.notification.threshold=50
  */
-@Singleton
+@ApplicationScoped
 @Startup
-public class InventoryNotificationMDB implements MessageListener {
+public class InventoryNotificationMDB {
 
   @Inject
   private CatalogService catalogService;
@@ -38,34 +38,27 @@ public class InventoryNotificationMDB implements MessageListener {
   private int lowThreshold;
 
   /**
-   * Processes incoming JMS messages from the inventory notification topic.
-   * Deserializes Order from message and updates inventory quantities.
+   * Processes incoming messages from the inventory-updates Kafka topic.
+   * Deserializes Order from message payload and updates inventory quantities.
    *
-   * @param rcvMessage the received JMS message
+   * @param orderStr the order JSON string from Kafka message
    */
-  @Override
-  public void onMessage(Message rcvMessage) {
+  @Incoming("inventory-updates")
+  @Transactional
+  public void processUpdate(String orderStr) {
     try {
       Log.info("Received inventory notification message");
 
-      if (rcvMessage instanceof TextMessage) {
-        TextMessage msg = (TextMessage) rcvMessage;
-        String orderStr = msg.getBody(String.class);
-        Order order = Transformers.jsonToOrder(orderStr);
+      Order order = Transformers.jsonToOrder(orderStr);
 
-        order.getItemList().forEach(orderItem -> {
-          try {
-            processOrderItem(orderItem);
-          } catch (Exception e) {
-            Log.errorf("Error processing order item %s: %s", orderItem.getProductId(), e.getMessage());
-          }
-        });
-      } else {
-        Log.warn("Received non-TextMessage, skipping");
-      }
+      order.getItemList().forEach(orderItem -> {
+        try {
+          processOrderItem(orderItem);
+        } catch (Exception e) {
+          Log.errorf("Error processing order item: %s", e.getMessage());
+        }
+      });
 
-    } catch (JMSException jmse) {
-      Log.errorf("JMS exception during message processing: %s", jmse.getMessage());
     } catch (Exception e) {
       Log.errorf("Unexpected error processing inventory notification: %s", e.getMessage());
     }

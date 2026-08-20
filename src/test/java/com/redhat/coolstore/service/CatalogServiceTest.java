@@ -2,31 +2,41 @@ package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.CatalogItemEntity;
 import com.redhat.coolstore.model.InventoryEntity;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
+import org.junit.jupiter.api.AfterEach;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class CatalogServiceTest {
 
-    @Mock
-    private EntityManager em;
+    // TODO: Service integration test required to verify transaction safety
+    // [RULE: Section 1B, lines 87-93] CatalogService.updateInventoryItems() calls em.merge()
+    // but service implementation lacks @Transactional annotation. Unit tests with mocked
+    // EntityManager cannot verify active transaction context. Convert to @QuarkusTest
+    // integration test or add @Transactional to updateInventoryItems() in CatalogService.java
+    // to avoid TransactionRequiredException at runtime.
+
+    // TODO: Service CDI scope verification required
+    // [RULE: Section 2, lines 111-114] RULEBOOK mandates @Stateless → @ApplicationScoped,
+    // but actual service uses @Singleton. Unit tests with @InjectMocks bypass CDI entirely.
+    // Convert to @QuarkusTest integration test with @Inject CatalogService to verify
+    // correct CDI scope annotation per RULEBOOK specification.
 
     @Mock
-    private Logger log;
+    private EntityManager em;
 
     @Mock
     private CriteriaBuilder cb;
@@ -43,9 +53,16 @@ public class CatalogServiceTest {
     @InjectMocks
     private CatalogService catalogService;
 
-    @Before
+    private AutoCloseable closeable;
+
+    @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        closeable = MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach
+    public void tearDown() throws Exception {
+        closeable.close();
     }
 
     @Test
@@ -97,5 +114,27 @@ public class CatalogServiceTest {
 
         assertEquals(47, inv.getQuantity());
         verify(em).merge(inv);
+    }
+
+    @Test
+    public void testUpdateInventoryItemsNotFound() {
+        when(em.find(CatalogItemEntity.class, "UNKNOWN")).thenReturn(null);
+
+        assertThrows(IllegalStateException.class, () -> {
+            catalogService.updateInventoryItems("UNKNOWN", 3);
+        });
+    }
+
+    @Test
+    public void testUpdateInventoryItemsInventoryNotFound() {
+        CatalogItemEntity item = new CatalogItemEntity();
+        item.setItemId("329299");
+        item.setInventory(null);
+
+        when(em.find(CatalogItemEntity.class, "329299")).thenReturn(item);
+
+        assertThrows(IllegalStateException.class, () -> {
+            catalogService.updateInventoryItems("329299", 3);
+        });
     }
 }

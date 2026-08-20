@@ -1,0 +1,24 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------< com.redhat.coolstore:coolstore-quarkus >---------------
+[INFO] Building coolstore-quarkus 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ coolstore-quarkus ---
+[INFO] Deleting /Users/sraghuna/local_dev/konveyor/kai_examples/coolstore/target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ coolstore-quarkus ---
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- quarkus:3.8.1:generate-code (default) @ coolstore-quarkus ---
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ coolstore-quarkus ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 28 source files with javac [debug release 11] to target/classes
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.549 s
+[INFO] Finished at: 2026-08-20T14:13:18-04:00
+[INFO] ------------------------------------------------------------------------

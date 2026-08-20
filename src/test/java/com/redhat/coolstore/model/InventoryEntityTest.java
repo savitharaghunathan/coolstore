@@ -1,31 +1,19 @@
 package com.redhat.coolstore.model;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.TestTransaction;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.inject.Inject;
+import jakarta.persistence.EntityManager;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+@QuarkusTest
 public class InventoryEntityTest {
 
-    private EntityManagerFactory emf;
+    @Inject
     private EntityManager em;
-
-    @Before
-    public void setUp() {
-        emf = Persistence.createEntityManagerFactory("primary");
-        em = emf.createEntityManager();
-    }
-
-    @After
-    public void tearDown() {
-        if (em != null && em.isOpen()) em.close();
-        if (emf != null && emf.isOpen()) emf.close();
-    }
 
     @Test
     public void testFieldMapping() {
@@ -42,6 +30,7 @@ public class InventoryEntityTest {
     }
 
     @Test
+    @TestTransaction
     public void testJpaRoundTrip() {
         InventoryEntity inv = new InventoryEntity();
         inv.setItemId("INV-2");
@@ -49,9 +38,8 @@ public class InventoryEntityTest {
         inv.setQuantity(25);
         inv.setLink("http://example.com/atlanta");
 
-        em.getTransaction().begin();
         em.persist(inv);
-        em.getTransaction().commit();
+        em.flush();
         em.clear();
 
         InventoryEntity found = em.find(InventoryEntity.class, "INV-2");
@@ -62,20 +50,19 @@ public class InventoryEntityTest {
     }
 
     @Test
+    @TestTransaction
     public void testQuantityUpdate() {
         InventoryEntity inv = new InventoryEntity();
         inv.setItemId("INV-3");
         inv.setLocation("Denver");
         inv.setQuantity(50);
 
-        em.getTransaction().begin();
         em.persist(inv);
-        em.getTransaction().commit();
+        em.flush();
 
-        em.getTransaction().begin();
         inv.setQuantity(45);
         em.merge(inv);
-        em.getTransaction().commit();
+        em.flush();
         em.clear();
 
         InventoryEntity found = em.find(InventoryEntity.class, "INV-3");

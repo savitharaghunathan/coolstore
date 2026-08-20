@@ -1,10 +1,6 @@
 package com.redhat.coolstore.model;
 
-import java.io.Serializable;
-
-public class ShoppingCartItem implements Serializable {
-
-	private static final long serialVersionUID = 6964558044240061049L;
+public class ShoppingCartItem {
 
 	private double price;
 	private int quantity;
@@ -56,8 +52,10 @@ public class ShoppingCartItem implements Serializable {
 
 	public OrderItem toOrderItem() {
 		OrderItem oi = new OrderItem();
-		oi.setQuantity(this.getQuantity());
-		oi.setProductId(this.product.getItemId());
+		if (product != null) {
+			oi.setProductId(product.getItemId());
+		}
+		oi.setQuantity(quantity);
 		return oi;
 	}
 

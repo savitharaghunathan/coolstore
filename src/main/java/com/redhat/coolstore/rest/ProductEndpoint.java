@@ -1,41 +1,49 @@
 package com.redhat.coolstore.rest;
 
-import java.io.Serializable;
 import java.util.List;
 
-import jakarta.enterprise.context.RequestScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import jakarta.ws.rs.*;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.service.ProductService;
 
-@RequestScoped
+@ApplicationScoped
 @Path("/products")
-@Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class ProductEndpoint implements Serializable {
+public class ProductEndpoint {
 
-    /**
-     *
-     */
-    private static final long serialVersionUID = -7227732980791688773L;
+    private static final Logger logger = LoggerFactory.getLogger(ProductEndpoint.class);
 
     @Inject
-    private ProductService pm;
+    private ProductService productService;
 
 
     @GET
-    @Path("/")
+    @Path("")
     public List<Product> listAll() {
-        return pm.getProducts();
+        logger.debug("Fetching all products");
+        return productService.getProducts();
     }
 
     @GET
     @Path("/{itemId}")
-    public Product getProduct(@PathParam("itemId") String itemId) {
-        return pm.getProductByItemId(itemId);
+    public Response getProduct(@PathParam("itemId") String itemId) {
+        logger.debug("Fetching product with itemId: {}", itemId);
+        Product product = productService.getProductByItemId(itemId);
+        if (product == null) {
+            logger.warn("Product not found for itemId: {}", itemId);
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        return Response.ok(product).build();
     }
 
 }

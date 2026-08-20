@@ -1,9 +1,8 @@
 package com.redhat.coolstore.service;
 
-import com.enterprise.audit.logging.config.AuditConfiguration;
-import com.enterprise.audit.logging.exception.AuditLoggingException;
-import com.enterprise.audit.logging.service.FileSystemAuditLogger;
 import com.redhat.coolstore.model.Order;
+
+// TODO(port): audit logging library (com.enterprise.audit.logging.*) not in Quarkus dependencies — stubbed out
 import io.quarkus.arc.Unremovable;
 import io.quarkus.logging.Log;
 import jakarta.inject.Inject;
@@ -28,27 +27,18 @@ public class OrderService implements AutoCloseable {
   @Inject
   private EntityManager em;
 
-  private FileSystemAuditLogger auditLogger;
-
   /**
    * Called automatically by Quarkus upon bean construction.
    */
-  void onStart() throws AuditLoggingException {
-    AuditConfiguration config = new AuditConfiguration();
-    config.setLogDirectory("./device-inventory-audit-logs");
-    config.setAutoCreateDirectory(true);
-    auditLogger = new FileSystemAuditLogger(config);
-    Log.info("OrderService initialized with audit logging enabled");
+  void onStart() {
+    Log.info("OrderService initialized");
   }
 
   /**
    * Called automatically by Quarkus during graceful shutdown.
    */
-  void onStop() throws AuditLoggingException {
-    if (auditLogger != null) {
-      auditLogger.close();
-      Log.info("OrderService audit logger closed");
-    }
+  void onStop() {
+    Log.info("OrderService shutdown");
   }
 
   @Override
@@ -63,7 +53,7 @@ public class OrderService implements AutoCloseable {
    */
   public void save(Order order) {
     em.persist(order);
-    Log.debugf("Order saved with ID: %s", order.getId());
+    Log.debugf("Order saved with ID: %s", order.getOrderId());
   }
 
   /**

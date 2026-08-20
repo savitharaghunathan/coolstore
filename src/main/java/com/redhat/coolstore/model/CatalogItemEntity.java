@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity
-@Table(name = "PRODUCT_CATALOG", uniqueConstraints = @UniqueConstraint(columnNames = "itemId"))
+@Table(name = "PRODUCT_CATALOG")
 public class CatalogItemEntity implements Serializable {
 
 	private static final long serialVersionUID = -7304814269819778382L;
@@ -21,9 +21,12 @@ public class CatalogItemEntity implements Serializable {
     @Column
 	private double price;
 
+	// TODO: Verify EAGER fetch doesn't break existing test mocks for InventoryEntity [RULE: Section 8 - Testing]
 	@OneToOne(cascade = CascadeType.ALL,fetch=FetchType.EAGER)
     @PrimaryKeyJoinColumn
 	private InventoryEntity inventory;
+
+	// TODO: Confirm InventoryEntity doesn't need back-reference to CatalogItemEntity for bidirectional navigation
 
 	public CatalogItemEntity() {
 	}
@@ -70,7 +73,7 @@ public class CatalogItemEntity implements Serializable {
 
     @Override
 	public String toString() {
-		return "ProductImpl [itemId=" + itemId + ", name=" + name + ", desc="
+		return "CatalogItemEntity [itemId=" + itemId + ", name=" + name + ", desc="
 				+ desc + ", price=" + price + "]";
     }
 

@@ -1,6 +1,5 @@
 package com.redhat.coolstore.rest;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,9 +22,7 @@ import com.redhat.coolstore.service.ShoppingCartService;
 
 @SessionScoped
 @Path("/cart")
-public class CartEndpoint implements Serializable {
-
-	private static final long serialVersionUID = -7227732980791688773L;
+public class CartEndpoint {
 
 	@Inject
 	private ShoppingCartService shoppingCartService;
