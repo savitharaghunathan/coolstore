@@ -1,0 +1,47 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ---------------< com.redhat.coolstore:coolstore-quarkus >---------------
+[INFO] Building coolstore-quarkus 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ coolstore-quarkus ---
+[INFO] Deleting /Users/sraghuna/local_dev/konveyor/kai_examples/coolstore/target
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ coolstore-quarkus ---
+[INFO] Copying 4 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- quarkus:3.8.1:generate-code (default) @ coolstore-quarkus ---
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ coolstore-quarkus ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 28 source files with javac [debug release 11] to target/classes
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/sraghuna/local_dev/konveyor/kai_examples/coolstore/src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java:[5,19] package jakarta.jms does not exist
+[ERROR] /Users/sraghuna/local_dev/konveyor/kai_examples/coolstore/src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java:[6,19] package jakarta.jms does not exist
+[ERROR] /Users/sraghuna/local_dev/konveyor/kai_examples/coolstore/src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java:[34,26] cannot find symbol
+  symbol:   class JMSException
+  location: class com.redhat.coolstore.service.OrderServiceMDB
+[INFO] 3 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.527 s
+[INFO] Finished at: 2026-08-20T14:12:14-04:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:compile (default-compile) on project coolstore-quarkus: Compilation failure: Compilation failure: 
+[ERROR] /Users/sraghuna/local_dev/konveyor/kai_examples/coolstore/src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java:[5,19] package jakarta.jms does not exist
+[ERROR] /Users/sraghuna/local_dev/konveyor/kai_examples/coolstore/src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java:[6,19] package jakarta.jms does not exist
+[ERROR] /Users/sraghuna/local_dev/konveyor/kai_examples/coolstore/src/main/java/com/redhat/coolstore/service/OrderServiceMDB.java:[34,26] cannot find symbol
+[ERROR]   symbol:   class JMSException
+[ERROR]   location: class com.redhat.coolstore.service.OrderServiceMDB
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

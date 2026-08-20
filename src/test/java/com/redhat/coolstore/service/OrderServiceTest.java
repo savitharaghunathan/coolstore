@@ -1,47 +1,52 @@
 package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.Order;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.InjectMock;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Unit test for OrderService using Quarkus test framework.
+ *
+ * Ported from JUnit 4 + Arquillian to JUnit 5 (Jupiter) + Quarkus.
+ * Uses @QuarkusTest annotation to run in Quarkus test context.
+ * Uses @InjectMock for Quarkus-managed mocking of dependencies.
+ */
+@QuarkusTest
 public class OrderServiceTest {
 
-    @Mock
+    @InjectMock
     private EntityManager em;
 
-    @Mock
+    @InjectMock
     private CriteriaBuilder cb;
 
-    @Mock
+    @InjectMock
     private CriteriaQuery<Order> criteriaQuery;
 
-    @Mock
+    @InjectMock
     private Root<Order> root;
 
-    @Mock
+    @InjectMock
     private TypedQuery<Order> typedQuery;
 
-    @InjectMocks
+    @InjectMock
     private OrderService orderService;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @Test
     public void testSaveOrder() {

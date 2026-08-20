@@ -3,8 +3,10 @@ package com.redhat.coolstore.rest;
 import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.model.OrderItem;
 import com.redhat.coolstore.service.OrderService;
-import org.junit.Before;
-import org.junit.Test;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.ws.rs.core.Response;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -12,9 +14,10 @@ import org.mockito.MockitoAnnotations;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@QuarkusTest
 public class OrderEndpointTest {
 
     @Mock
@@ -23,9 +26,9 @@ public class OrderEndpointTest {
     @InjectMocks
     private OrderEndpoint endpoint;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -48,7 +51,9 @@ public class OrderEndpointTest {
         order.setOrderValue(50.0);
         when(os.getOrderById(1L)).thenReturn(order);
 
-        Order result = endpoint.getOrder(1L);
+        Response response = endpoint.getOrder(1L);
+        assertEquals(200, response.getStatus());
+        Order result = response.readEntity(Order.class);
         assertNotNull(result);
         assertEquals("Charlie", result.getCustomerName());
     }
@@ -64,8 +69,18 @@ public class OrderEndpointTest {
         order.setItemList(Arrays.asList(item));
         when(os.getOrderById(5L)).thenReturn(order);
 
-        Order result = endpoint.getOrder(5L);
+        Response response = endpoint.getOrder(5L);
+        assertEquals(200, response.getStatus());
+        Order result = response.readEntity(Order.class);
         assertEquals(1, result.getItemList().size());
         assertEquals("329299", result.getItemList().get(0).getProductId());
+    }
+
+    @Test
+    public void testGetOrderNotFound() {
+        when(os.getOrderById(999L)).thenReturn(null);
+
+        Response response = endpoint.getOrder(999L);
+        assertEquals(404, response.getStatus());
     }
 }

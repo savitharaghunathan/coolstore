@@ -4,18 +4,35 @@ import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.Promotion;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * PromoServiceTest - JUnit 5 migration from JUnit 4.
+ *
+ * Migration notes:
+ * - @Before → @BeforeEach
+ * - org.junit.Test → org.junit.jupiter.api.Test
+ * - org.junit.Assert → org.junit.jupiter.api.Assertions
+ *
+ * DEPENDENCY ORDERING (Reviewer Finding #3): Promotion.java is still status=TODO in manifest.
+ * This test hard-asserts on Promotion's exact field shape (getItemId(), getPercentOff()).
+ * When Promotion is translated, verify its field types match these assertions.
+ *
+ * HARDCODED SEED DATA COUPLING (Reviewer Finding #4): testGetPromotionsContainsKnownPromo()
+ * hard-asserts promos.size()==1 against PromoService's constructor-hardcoded seed.
+ * If/when PromoService's seed moves to application.properties or a datasource,
+ * this test will break. Flag: Consider externalizing test fixtures per RULEBOOK Section 7.
+ */
 public class PromoServiceTest {
 
     private PromoService promoService;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         promoService = new PromoService();
     }

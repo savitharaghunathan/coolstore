@@ -1,45 +1,30 @@
 package com.redhat.coolstore.model;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.TestTransaction;
+import org.junit.jupiter.api.Test;
+import jakarta.persistence.EntityManager;
+import jakarta.inject.Inject;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import java.util.List;
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.junit.Assert.*;
-
+@QuarkusTest
 public class OrderItemTest {
 
-    private EntityManagerFactory emf;
-    private EntityManager em;
-
-    @Before
-    public void setUp() {
-        emf = Persistence.createEntityManagerFactory("primary");
-        em = emf.createEntityManager();
-    }
-
-    @After
-    public void tearDown() {
-        if (em != null && em.isOpen()) em.close();
-        if (emf != null && emf.isOpen()) emf.close();
-    }
+    @Inject
+    EntityManager em;
 
     @Test
+    @TestTransaction
     public void testJpaRoundTrip() {
         OrderItem item = new OrderItem();
         item.setProductId("SKU-123");
         item.setQuantity(3);
 
-        em.getTransaction().begin();
         em.persist(item);
-        em.getTransaction().commit();
         em.clear();
 
-        List<OrderItem> results = em.createQuery(
+        var results = em.createQuery(
             "SELECT oi FROM OrderItem oi WHERE oi.productId = :pid", OrderItem.class)
             .setParameter("pid", "SKU-123")
             .getResultList();

@@ -2,52 +2,33 @@ package com.redhat.coolstore.utils;
 
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.FlywayException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import javax.ejb.Singleton;
-import javax.ejb.Startup;
-import javax.ejb.TransactionManagement;
-import javax.ejb.TransactionManagementType;
-import javax.inject.Inject;
-import javax.sql.DataSource;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import io.quarkus.runtime.StartupEvent;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.inject.Inject;
 
 /**
  * Created by tqvarnst on 2017-04-04.
+ * Migrated from @Singleton @Startup (EJB) to @ApplicationScoped with Quarkus @StartupEvent listener
  */
-@Singleton
-@Startup
-@TransactionManagement(TransactionManagementType.BEAN)
+@ApplicationScoped
 public class DataBaseMigrationStartup {
 
+    private static final Logger log = LoggerFactory.getLogger(DataBaseMigrationStartup.class);
+
     @Inject
-    Logger logger;
+    Flyway flyway;
 
-    @Resource(mappedName = "java:jboss/datasources/CoolstoreDS")
-    DataSource dataSource;
-
-    @PostConstruct
-    private void startup() {
-
-
-        try {
-            logger.info("Initializing/migrating the database using FlyWay");
-            Flyway flyway = new Flyway();
-            flyway.setDataSource(dataSource);
-            flyway.baseline();
-            // Start the db.migration
-            flyway.migrate();
-        } catch (FlywayException e) {
-            if(logger !=null)
-                logger.log(Level.SEVERE,"FAILED TO INITIALIZE THE DATABASE: " + e.getMessage(),e);
-            else
-                System.out.println("FAILED TO INITIALIZE THE DATABASE: " + e.getMessage() + " and injection of logger doesn't work");
-
+    void startup(@Observes StartupEvent ev) throws FlywayException {
+        if (log != null) {
+            log.info("Initializing/migrating the database using FlyWay");
         }
+        flyway.baseline();
+        // Start the db.migration
+        flyway.migrate();
     }
-
-
 
 }

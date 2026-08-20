@@ -1,0 +1,49 @@
+COMPILATION ERRORS — Round 1
+
+47 total errors across 5 files:
+
+FILE: OrderServiceMDB.java
+  Line 3-9: javax.ejb and javax.jms packages missing (namespace not updated)
+  Line 14: @MessageDriven not found (import missing)
+  Line 15-17: @ActivationConfigProperty not found
+  Line 20,23: @Inject not found (import missing)
+  Line 26: method does not override (MessageListener interface signature wrong)
+  Line 27,29,31,32: Message, TextMessage classes not found
+  Line 42: JMSException not found
+
+FILE: OrderService.java
+  Line 3-5: External audit logging package missing (com.enterprise.audit.logging.*)
+  Line 31: FileSystemAuditLogger not found
+  Line 36,47: AuditLoggingException not found
+  Line 37: AuditConfiguration not found
+  Line 40: FileSystemAuditLogger not found
+  Line 66: Order.getId() method not found (Order model missing getter)
+
+FILE: InventoryNotificationMDB.java
+  Line 9-12: jakarta.jms packages not found (wrong imports)
+  Line 32: @MessageDriven signature wrong, MessageListener not found
+  Line 46: method does not override (onMessage signature)
+  Line 51,52: TextMessage not found
+  Line 67: JMSException not found
+
+FILE: DataBaseMigrationStartup.java
+  Line 9-10: jakarta.ejb packages not found
+  Line 20: @TransactionManagement not found
+  Line 20: TransactionManagementType not found
+
+FILE: NonCatalogLogger.java
+  Line 11,15: Cannot assign to static final variable log
+
+Summary:
+- 7 errors: namespace mismatches (javax vs jakarta)
+- 15 errors: missing imports/annotations (@Inject, @MessageDriven, etc)
+- 10 errors: JMS classes not found (Message, TextMessage, JMSException)
+- 10 errors: external dependency gaps (audit logging, weblogic APIs)
+- 5 errors: signature/method mismatches
+
+Root causes:
+1. OrderServiceMDB: Still using javax.* instead of jakarta.* for JMS/EJB
+2. InventoryNotificationMDB: Using jakarta.jms but @Incoming handler not set up (SmallRye pattern)
+3. OrderService: References external audit logging library not in dependencies
+4. DataBaseMigrationStartup: EJB transaction APIs (@TransactionManagement) not available
+5. NonCatalogLogger: Static final field assignment error (weblogic compatibility shim)

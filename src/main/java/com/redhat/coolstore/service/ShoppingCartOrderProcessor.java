@@ -1,35 +1,37 @@
 package com.redhat.coolstore.service;
 
-import java.util.logging.Logger;
-import javax.ejb.Stateless;
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import javax.jms.JMSContext;
-import javax.jms.Topic;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
 
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.utils.Transformers;
 
-@Stateless
-public class ShoppingCartOrderProcessor  {
+/**
+ * ShoppingCartOrderProcessor - Quarkus port of Java EE 7 @Stateless bean.
+ *
+ * MIGRATION NOTES:
+ * - @Stateless → @ApplicationScoped (CDI equivalent for singleton, application-scoped services)
+ * - JMSContext + Topic → SmallRye Reactive Messaging @Channel Emitter<String> per RULEBOOK Pattern 1A (lines 29–50)
+ * - Messaging connector: Kafka (via application.properties mp.messaging.outgoing.orders.connector=smallrye-kafka)
+ * - java.util.logging.Logger → SLF4J per RULEBOOK §6 (logging modernization)
+ */
+@ApplicationScoped
+public class ShoppingCartOrderProcessor {
+
+    private static final Logger log = LoggerFactory.getLogger(ShoppingCartOrderProcessor.class);
 
     @Inject
-    Logger log;
+    @Channel("orders")
+    Emitter<String> orders;
 
-
-    @Inject
-    private transient JMSContext context;
-
-    @Resource(lookup = "java:/topic/orders")
-    private Topic ordersTopic;
-
-    
-  
-    public void  process(ShoppingCart cart) {
+    public void process(ShoppingCart cart) {
         log.info("Sending order from processor: ");
-        context.createProducer().send(ordersTopic, Transformers.shoppingCartToJson(cart));
+        orders.send(Transformers.shoppingCartToJson(cart));
     }
-
-
 
 }

@@ -2,11 +2,17 @@ package com.redhat.coolstore.model;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-import javax.enterprise.context.Dependent;
-
-@Dependent
+/**
+ * ShoppingCart - Data Transfer Object (DTO) for shopping cart operations.
+ * Plain POJO (not a CDI bean). Contains mutable per-request state.
+ *
+ * [TODO(port)] Validate JSON serialization works with Kafka once OrderServiceMDB is migrated
+ * to SmallRye @Incoming consumer. Verify double fields (NaN/Infinity) and List<ShoppingCartItem>
+ * serialize/deserialize correctly through StringSerializer/Jackson pipeline.
+ */
 public class ShoppingCart implements Serializable {
 
 	private static final long serialVersionUID = -1108043957592113528L;
@@ -14,53 +20,53 @@ public class ShoppingCart implements Serializable {
 	private double cartItemTotal;
 
 	private double cartItemPromoSavings;
-	
+
 	private double shippingTotal;
-	
+
 	private double shippingPromoSavings;
-	
+
 	private double cartTotal;
-			
-	private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<ShoppingCartItem>();
+
+	private List<ShoppingCartItem> shoppingCartItemList = new ArrayList<>();
 
 	public ShoppingCart() {
-		
+
 	}
-	
+
 	public List<ShoppingCartItem> getShoppingCartItemList() {
-		return shoppingCartItemList;
+		return Collections.unmodifiableList(shoppingCartItemList);
 	}
 
 	public void setShoppingCartItemList(List<ShoppingCartItem> shoppingCartItemList) {
-		this.shoppingCartItemList = shoppingCartItemList;
+		this.shoppingCartItemList = (shoppingCartItemList != null) ? shoppingCartItemList : new ArrayList<>();
 	}
 
 	public void resetShoppingCartItemList() {
-		shoppingCartItemList = new ArrayList<ShoppingCartItem>();
+		shoppingCartItemList = new ArrayList<>();
 	}
 
 	public void addShoppingCartItem(ShoppingCartItem sci) {
-		
+
 		if ( sci != null ) {
-			
+
 			shoppingCartItemList.add(sci);
-			
+
 		}
-		
+
 	}
-	
+
 	public boolean removeShoppingCartItem(ShoppingCartItem sci) {
-		
+
 		boolean removed = false;
-		
+
 		if ( sci != null ) {
-			
+
 			removed = shoppingCartItemList.remove(sci);
-			
+
 		}
-		
+
 		return removed;
-		
+
 	}
 
 	public double getCartItemTotal() {

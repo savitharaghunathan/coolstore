@@ -1,42 +1,60 @@
 package com.redhat.coolstore.rest;
 
-import java.io.Serializable;
 import java.util.List;
 
-import javax.enterprise.context.RequestScoped;
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+import jakarta.transaction.Transactional;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.service.OrderService;
 
-@RequestScoped
+@ApplicationScoped
 @Path("/orders")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class OrderEndpoint implements Serializable {
+public class OrderEndpoint {
 
-    private static final long serialVersionUID = -7227732980791688774L;
+    private static final Logger log = LoggerFactory.getLogger(OrderEndpoint.class);
+
+    private final OrderService os;
 
     @Inject
-    private OrderService os;
+    public OrderEndpoint(OrderService os) {
+        this.os = os;
+    }
 
 
     @GET
-    @Path("/")
+    @Transactional
     public List<Order> listAll() {
-        return os.getOrders();
+        log.info("Retrieving all orders");
+        List<Order> orders = os.getOrders();
+        log.info("Retrieved {} orders", orders.size());
+        return orders;
     }
 
     @GET
     @Path("/{orderId}")
-    public Order getOrder(@PathParam("orderId") long orderId) {
-        return os.getOrderById(orderId);
+    @Transactional
+    public Response getOrder(@PathParam("orderId") long orderId) {
+        log.info("Retrieving order with id: {}", orderId);
+        Order order = os.getOrderById(orderId);
+        if (order == null) {
+            log.warn("Order not found with id: {}", orderId);
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+        log.info("Order found with id: {}", orderId);
+        return Response.ok(order).build();
     }
 
 }

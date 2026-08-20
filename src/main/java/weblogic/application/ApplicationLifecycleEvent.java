@@ -16,6 +16,15 @@
  */
 package weblogic.application;
 
+/**
+ * Quarkus Port Note: This is a WebLogic-specific interface.
+ * In Quarkus, application lifecycle events are handled via CDI lifecycle annotations:
+ * - @PostConstruct (runs after dependency injection)
+ * - @PreDestroy (runs before bean destruction)
+ * - Quarkus startup/shutdown events: io.quarkus.runtime.StartupEvent, io.quarkus.runtime.ShutdownEvent
+ *
+ * If legacy code depends on this interface, implement using Quarkus lifecycle mechanisms instead.
+ */
 public interface ApplicationLifecycleEvent {
 
 }

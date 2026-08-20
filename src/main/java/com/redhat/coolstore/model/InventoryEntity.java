@@ -2,19 +2,19 @@ package com.redhat.coolstore.model;
 
 import java.io.Serializable;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @XmlRootElement
 @Table(name = "INVENTORY", uniqueConstraints = @UniqueConstraint(columnNames = "itemId"))
 public class InventoryEntity implements Serializable {
 
-	private static final long serialVersionUID = 7526472295622776147L; 
+	private static final long serialVersionUID = 7526472295622776147L;
 
     @Id
     private String itemId;
@@ -69,6 +69,6 @@ public class InventoryEntity implements Serializable {
 
 	@Override
     public String toString() {
-        return "InventoryEntity [itemId=" + itemId + ", availability=" + quantity + "/" + location + " link=" + link + "]";
+        return "InventoryEntity [itemId=" + itemId + ", quantity=" + quantity + "/" + location + " link=" + link + "]";
     }
 }

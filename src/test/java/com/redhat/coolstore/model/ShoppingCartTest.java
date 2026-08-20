@@ -1,15 +1,20 @@
 package com.redhat.coolstore.model;
 
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import io.quarkus.test.junit.QuarkusTest;
 
+@QuarkusTest
 public class ShoppingCartTest {
 
     private ShoppingCart cart;
 
-    @Before
+    @BeforeEach
     public void setUp() {
+        // TODO(port): ShoppingCart is now a @Dependent CDI bean. Consider injecting via @Inject
+        // to validate CDI scope lifecycle behavior, per RULEBOOK.md Section 2 (EJB → CDI Conversion).
+        // Currently tests POJO behavior only, not CDI container integration.
         cart = new ShoppingCart();
     }
 
@@ -35,6 +40,9 @@ public class ShoppingCartTest {
     @Test
     public void testRemoveItem() {
         ShoppingCartItem item = new ShoppingCartItem();
+        Product p = new Product();
+        p.setItemId("456");
+        item.setProduct(p);
         cart.addShoppingCartItem(item);
         assertTrue(cart.removeShoppingCartItem(item));
         assertEquals(0, cart.getShoppingCartItemList().size());
@@ -48,6 +56,9 @@ public class ShoppingCartTest {
     @Test
     public void testResetShoppingCartItemList() {
         ShoppingCartItem item = new ShoppingCartItem();
+        Product p = new Product();
+        p.setItemId("789");
+        item.setProduct(p);
         cart.addShoppingCartItem(item);
         cart.resetShoppingCartItemList();
         assertEquals(0, cart.getShoppingCartItemList().size());

@@ -1,19 +1,17 @@
 package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.ShoppingCart;
-import org.junit.Before;
-import org.junit.Test;
+import io.quarkus.test.junit.QuarkusTest;
+import jakarta.inject.Inject;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+@QuarkusTest
 public class ShippingServiceTest {
 
+    @Inject
     private ShippingService shippingService;
-
-    @Before
-    public void setUp() {
-        shippingService = new ShippingService();
-    }
 
     private ShoppingCart cartWithTotal(double total) {
         ShoppingCart sc = new ShoppingCart();

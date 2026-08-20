@@ -16,6 +16,17 @@
  */
 package weblogic.application;
 
+/**
+ * Quarkus Port Note: This is a WebLogic-specific abstract class.
+ * In Quarkus, application lifecycle events are handled via CDI lifecycle annotations:
+ * - @PostConstruct (runs after dependency injection)
+ * - @PreDestroy (runs before bean destruction)
+ * - Quarkus startup/shutdown events: io.quarkus.runtime.StartupEvent, io.quarkus.runtime.ShutdownEvent
+ *
+ * If legacy code depends on this class, implement using Quarkus lifecycle mechanisms instead.
+ * For example, preStart() can be replaced with @javax.annotation.PostConstruct (jakarta.annotation.PostConstruct),
+ * and postStop() can be replaced with @PreDestroy.
+ */
 public abstract class ApplicationLifecycleListener {
 
     public void postStart(ApplicationLifecycleEvent evt) {
