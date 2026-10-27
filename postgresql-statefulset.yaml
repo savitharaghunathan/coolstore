@@ -1,0 +1,96 @@
+# PostgreSQL 15 (containerize stage) — StatefulSet with persistent storage per skill.
+# Skill: databases needing persistence deploy as StatefulSet (good for dev/test;
+# use an operator or managed service for production).
+# Note: registry.redhat.io requires a pull secret (oc create secret docker-registry
+# ... linked to the serviceaccount, or `oc import-image`); pin a specific tag for prod.
+# Credentials come from coolstore-secrets (keys: db-username, db-password).
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: postgresql
+spec:
+  clusterIP: None   # headless service for the StatefulSet
+  selector:
+    app: coolstore
+    name: postgresql
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgresql
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: postgresql
+spec:
+  serviceName: postgresql
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coolstore
+      name: postgresql
+  template:
+    metadata:
+      labels:
+        app: coolstore
+        name: postgresql
+    spec:
+      securityContext:
+        runAsNonRoot: true   # RH postgresql image runs as its default non-root UID 26
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: postgresql
+          image: registry.redhat.io/rhel9/postgresql-15:latest
+          env:
+            - name: POSTGRESQL_DATABASE
+              value: coolstore
+            - name: POSTGRESQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: coolstore-secrets
+                  key: db-username
+            - name: POSTGRESQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: coolstore-secrets
+                  key: db-password
+          ports:
+            - name: postgres
+              containerPort: 5432
+          readinessProbe:
+            exec:
+              command: [pg_isready, -U, coolstore, -d, coolstore]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: [pg_isready, -U, coolstore, -d, coolstore]
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/pgsql/data
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi   # size per environment; app data is small (catalog + orders)

@@ -1,0 +1,24 @@
+# CoolStore internal Service (containerize stage).
+# sessionAffinity: ClientIP approximates the sticky-session requirement of the
+# @SessionScoped ShoppingCartService until COOLSTORE-201 (cart state externalization)
+# lands — see migration/EXECUTION-WAVE2-NOTES.md decision 3.
+apiVersion: v1
+kind: Service
+metadata:
+  name: coolstore
+  labels:
+    app: coolstore
+    app.kubernetes.io/part-of: coolstore
+spec:
+  type: ClusterIP
+  selector:
+    app: coolstore
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+      protocol: TCP

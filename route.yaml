@@ -1,0 +1,19 @@
+# CoolStore external Route (containerize stage) — TLS edge termination, HTTP redirected.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: coolstore
+  labels:
+    app: coolstore
+    app.kubernetes.io/part-of: coolstore
+spec:
+  to:
+    kind: Service
+    name: coolstore
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

@@ -1,0 +1,31 @@
+# Build-context exclusions (containerize stage) — keeps image small and secrets out.
+# Only pom.xml + src/ (and the Dockerfile itself) are needed to build the image.
+.git
+.gitignore
+*.md
+.rgctl/
+mig-prompt-workspace/
+mig-plan-workspace/
+mig-execute-workspace/
+migration/
+openshift/
+scripts/
+rules/
+assets/
+lib/
+tests/
+docs/
+.env
+.env.*
+*.log
+node_modules/
+__pycache__/
+*.pyc
+target/
+build/
+Containerfile
+Dockerfile
+podman-compose.yml
+*.yaml
+*.yml
+realm-export.json
