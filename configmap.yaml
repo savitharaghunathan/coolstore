@@ -1,0 +1,20 @@
+# CoolStore application configuration (non-sensitive) — MigIQ containerize stage.
+# Consumed by the Deployment via envFrom.configMapRef.
+# Sensitive values live in secret.yaml (coolstore-db, coolstore-oidc).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coolstore-config
+  namespace: coolstore-dev
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: coolstore
+    app.kubernetes.io/part-of: coolstore
+data:
+  # PostgreSQL — service name of database-statefulset.yaml (dev/test).
+  # For production, point this at the managed/operator-provisioned database.
+  QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgresql:5432/coolstore
+  # AMQ Streams (Strimzi) Kafka cluster bootstrap service.
+  KAFKA_BOOTSTRAP_SERVERS: my-cluster-kafka-bootstrap:9092
+  # Allowed origin for the browser storefront (OpenShift Route host).
+  QUARKUS_HTTP_CORS_ORIGINS: https://coolstore-dev.apps.example.com

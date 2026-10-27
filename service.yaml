@@ -1,0 +1,20 @@
+# CoolStore internal networking — MigIQ containerize stage.
+apiVersion: v1
+kind: Service
+metadata:
+  name: coolstore
+  namespace: coolstore-dev
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: coolstore
+    app.kubernetes.io/part-of: coolstore
+spec:
+  type: ClusterIP
+  sessionAffinity: None
+  selector:
+    app: coolstore
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
