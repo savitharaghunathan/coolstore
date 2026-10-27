@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
@@ -22,6 +23,7 @@ import com.redhat.coolstore.service.ShoppingCartService;
 
 @SessionScoped
 @Path("/cart")
+@RolesAllowed("user")
 public class CartEndpoint {
 
 	@Inject

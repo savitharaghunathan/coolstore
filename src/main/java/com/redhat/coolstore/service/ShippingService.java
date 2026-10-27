@@ -16,9 +16,9 @@ import jakarta.enterprise.context.ApplicationScoped;
  * - Calculations are thread-safe when ShoppingCart instances are not shared across concurrent threads
  *   (Assumes stable ShoppingCart state during calculation)
  *
- * TODO(MIGRATION): Removed 'implements ShippingServiceRemote' and @Remote annotation.
- * Verify no clients depend on this interface for remote lookups or type safety.
- * See RULEBOOK.md - no guidance on @Remote EJB handling in migration rules.
+ * TG2.3: ShippingServiceRemote deleted (SAFE-DELETE per migration/inventory.tsv;
+ * rgctl blast-radius confirmed zero callers; sole consumer ShoppingCartService
+ * injects the concrete type; Quarkus has no distributed-EJB remoting layer).
  */
 @ApplicationScoped
 public class ShippingService {

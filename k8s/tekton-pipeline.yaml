@@ -1,0 +1,58 @@
+# CI/CD (TG7.7): build image from Git, scan, deploy per environment.
+# Secret-scanning step from TG5.4 runs before promotion.
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: coolstore-ci
+spec:
+  params:
+    - name: git-url
+      default: https://github.com/example/coolstore.git
+    - name: revision
+      default: main
+  workspaces:
+    - name: source
+  tasks:
+    - name: clone
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      params:
+        - name: url
+          value: $(params.git-url)
+        - name: revision
+          value: $(params.revision)
+      workspaces:
+        - name: output
+          workspace: source
+    - name: test
+      runAfter: [clone]
+      taskRef:
+        name: maven
+        kind: ClusterTask
+      params:
+        - name: GOALS
+          value: ["clean", "verify"]   # TG1.8 test-suite entry point
+      workspaces:
+        - name: source
+          workspace: source
+    - name: secret-scan   # TG5.4 CI secret scanning
+      runAfter: [clone]
+      taskRef:
+        name: trivy-scan  # or gitleaks task; fail on findings
+      workspaces:
+        - name: source
+          workspace: source
+    - name: build-image
+      runAfter: [test, secret-scan]
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/coolstore-dev/coolstore:$(params.revision)
+        - name: DOCKERFILE
+          value: ./Containerfile
+      workspaces:
+        - name: source
+          workspace: source

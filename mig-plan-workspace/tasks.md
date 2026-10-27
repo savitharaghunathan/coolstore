@@ -22,32 +22,32 @@ datasource, no container image or OpenShift manifests.
 Scope: `com.redhat.coolstore.model` + `utils` (rgctl migration-plan steps 5–6).
 Restore a green build/test baseline before any further change.
 
-- [ ] 1.1 Fix legacy `javax.jms` imports in
+- [x] 1.1 Fix legacy `javax.jms` imports in
   `src/test/java/com/redhat/coolstore/service/ShoppingCartOrderProcessorTest.java`
   (lines 13–15: `JMSContext`, `JMSProducer`, `Topic`): rewrite the test to assert the
   SmallRye `@Channel("orders") Emitter<String>` contract (message sent on
   `process(ShoppingCart)`), mirroring RULEBOOK Pattern 1A
-- [ ] 1.2 Add missing test dependency `mockito-junit-jupiter` (test scope) to `pom.xml`
+- [x] 1.2 Add missing test dependency `mockito-junit-jupiter` (test scope) to `pom.xml`
   alongside `mockito-core`
-- [ ] 1.3 Run `mvn clean verify`; catalog every failure (test name, root cause) into a
+- [x] 1.3 Run `mvn clean verify`; catalog every failure (test name, root cause) into a
   burn-down list; do not skip tests silently
-- [ ] 1.4 Verify `@Transactional` is present on both `@Incoming` consumer methods
+- [x] 1.4 Verify `@Transactional` is present on both `@Incoming` consumer methods
   (`OrderServiceMDB.onMessage`, `InventoryNotificationMDB` handler) per RULEBOOK
   Amendment 1 — SmallRye `@Incoming` does not start transactions; add if missing
-- [ ] 1.5 Triage the 18 deferred `TODO(port)`/`BUG(port)`/`PERF(port)` markers left by
+- [x] 1.5 Triage the 18 deferred `TODO(port)`/`BUG(port)`/`PERF(port)` markers left by
   the prior migration run into: must-fix-now / post-launch / wontfix, with owners
-- [ ] 1.6 **Test Generation**: Use mig-test-gen to create/restore characterization tests
+- [x] 1.6 **Test Generation**: Use mig-test-gen to create/restore characterization tests
   for the pricing & order model
   - Command: `/skill mig-test-gen` targeting `com.redhat.coolstore.model` +
     `ShoppingCartService` pricing rules (cart totals, promotions, shipping fees)
   - Expected: unit tests for `ShoppingCart.cartItemTotal`, `Promotion` application,
     `ShippingService` fees; these become the parity baseline
-- [ ] 1.7 **Containerization**: Confirm baseline changes require no image changes yet
+- [x] 1.7 **Containerization**: Confirm baseline changes require no image changes yet
   - Command: `/skill mig-containerize` deferred to Task Group 6; here only record that
     `pom.xml` dependency additions (1.2) must be reflected in the builder stage
-- [ ] 1.8 **Deployment**: No manifest changes; record test-suite entry point
+- [x] 1.8 **Deployment**: No manifest changes; record test-suite entry point
   (`mvn verify`) for the CI pipeline task (Task Group 7)
-- [ ] 1.9 **Documentation**: Document the verified baseline
+- [x] 1.9 **Documentation**: Document the verified baseline
   - Record green/failing test inventory in `migration/` notes
   - Update README "Build and test" section for Quarkus (`mvn clean verify`)
 
@@ -55,32 +55,32 @@ Restore a green build/test baseline before any further change.
 
 Scope: `weblogic.application` compat layer (rgctl migration-plan step 32) + WAR leftovers.
 
-- [ ] 2.1 Delete WebLogic compatibility shims
+- [x] 2.1 Delete WebLogic compatibility shims
   `src/main/java/weblogic/application/ApplicationLifecycleEvent.java` and
   `ApplicationLifecycleListener.java`; replace their function (if any startup hook is
   needed) with Quarkus `@StartupEvent` observers — verify `StartupListener.java`
   already covers this before deleting
-- [ ] 2.2 Delete WAR-era descriptors `src/main/webapp/WEB-INF/web.xml` (empty
+- [x] 2.2 Delete WAR-era descriptors `src/main/webapp/WEB-INF/web.xml` (empty
   `<distributable/>` only) and `src/main/webapp/WEB-INF/beans.xml` (superseded by
   Quarkus ARC zero-config discovery)
-- [ ] 2.3 Remove `ShippingServiceRemote` interface per `migration/inventory.tsv`
+- [x] 2.3 Remove `ShippingServiceRemote` interface per `migration/inventory.tsv`
   SAFE-DELETE analysis: delete the file and drop
   `implements ShippingServiceRemote` from `ShippingService.java` (sole consumer
   `ShoppingCartService` injects the concrete type; no distributed remoting in Quarkus)
-- [ ] 2.4 Fix null-safety `BUG(port)` in `ShoppingCartService.initShoppingCartForPricing()`
+- [x] 2.4 Fix null-safety `BUG(port)` in `ShoppingCartService.initShoppingCartForPricing()`
   (`getShoppingCartItemList()` not validated) — align with original Java EE behavior
-- [ ] 2.5 Sweep for remaining `javax.*` references repo-wide in Java sources
+- [x] 2.5 Sweep for remaining `javax.*` references repo-wide in Java sources
   (`rg "import javax\." src/`) — target: zero
-- [ ] 2.6 **Test Generation**: Use mig-test-gen to guard the cleanup (no behavior change)
+- [x] 2.6 **Test Generation**: Use mig-test-gen to guard the cleanup (no behavior change)
   - Command: `/skill mig-test-gen` for regression coverage of startup, CDI wiring
   - Expected: `@QuarkusTest` smoke test asserting all CDI beans
     (`ShoppingCartService`, `OrderService`, `CatalogService`, …) resolve; startup
     event tests for `DataBaseMigrationStartup`/`StartupListener`
-- [ ] 2.7 **Containerization**: Verify deleted shims/descriptors are not referenced by
+- [x] 2.7 **Containerization**: Verify deleted shims/descriptors are not referenced by
   any build resource; no image impact (recorded for Task Group 6)
-- [ ] 2.8 **Deployment**: No manifest changes; note removal of weblogic shims in the
+- [x] 2.8 **Deployment**: No manifest changes; note removal of weblogic shims in the
   architecture record consumed by Task Group 7 docs
-- [ ] 2.9 **Documentation**: Document cleanup decisions
+- [x] 2.9 **Documentation**: Document cleanup decisions
   - Update `migration/inventory.tsv` statuses for deleted files
   - Note in README that WebLogic compatibility layer is gone
 
@@ -88,32 +88,32 @@ Scope: `weblogic.application` compat layer (rgctl migration-plan step 32) + WAR 
 
 Scope: serve the AngularJS webapp from the Quarkus jar (JSPs unsupported).
 
-- [ ] 3.1 Add `quarkus-smallrye-health` extension to `pom.xml` (also required by
+- [x] 3.1 Add `quarkus-smallrye-health` extension to `pom.xml` (also required by
   Task Group 7 probes)
-- [ ] 3.2 Move `src/main/webapp/` static content (`app/`, `partials/`,
+- [x] 3.2 Move `src/main/webapp/` static content (`app/`, `partials/`,
   `bower_components/`, `coolstore.json`, `keycloak.json`, CSS/imgs) to
   `src/main/resources/META-INF/resources/` preserving absolute paths
   (`/bower_components/...` referenced by `index.jsp`)
-- [ ] 3.3 Convert `index.jsp` → static `index.html` in
+- [x] 3.3 Convert `index.jsp` → static `index.html` in
   `META-INF/resources/`: drop the `<% request.getSession(true); %>` scriptlet
   (session is created on first authenticated API call; verify frontend does not
   depend on eager session)
-- [ ] 3.4 Replace `health.jsp` with SmallRye Health endpoints (`/q/health/live`,
+- [x] 3.4 Replace `health.jsp` with SmallRye Health endpoints (`/q/health/live`,
   `/q/health/ready`); delete `health.jsp`
-- [ ] 3.5 Verify the REST base path contract: frontend calls hit
+- [x] 3.5 Verify the REST base path contract: frontend calls hit
   `@ApplicationPath("/services")` (`RestApplication.java` carries a `TODO(port)` to
   evaluate the base path — decide keep `/services` vs `/q`-style routing and update
   `app/` JS config accordingly)
-- [ ] 3.6 **Test Generation**: Use mig-test-gen for frontend serving smoke tests
+- [x] 3.6 **Test Generation**: Use mig-test-gen for frontend serving smoke tests
   - Command: `/skill mig-test-gen` for static-resource and health endpoint tests
   - Expected: `@QuarkusTest` asserting HTTP 200 for `/`, `/bower_components/jquery/dist/jquery.min.js`,
     a sample partial, and `/q/health`
-- [ ] 3.7 **Containerization**: Confirm static assets are packaged in the jar
+- [x] 3.7 **Containerization**: Confirm static assets are packaged in the jar
   (`META-INF/resources` is included by default) — record asset volume (~frontend size)
     for image sizing in Task Group 6
-- [ ] 3.8 **Deployment**: Record that `/q/health/*` replaces `health.jsp` for probes
+- [x] 3.8 **Deployment**: Record that `/q/health/*` replaces `health.jsp` for probes
   in Task Group 7 manifests
-- [ ] 3.9 **Documentation**: Document the static-serving layout and base-path decision
+- [x] 3.9 **Documentation**: Document the static-serving layout and base-path decision
   - README: updated URLs (`/`, `/services/...`, `/q/health`)
   - Runbook entry for adding future static assets
 
@@ -122,34 +122,34 @@ Scope: serve the AngularJS webapp from the Quarkus jar (JSPs unsupported).
 Scope: `com.redhat.coolstore.rest` (rgctl migration-plan step 53). Highest-risk gap:
 endpoints currently ship unauthenticated.
 
-- [ ] 4.1 Annotate REST endpoints with security semantics matching the original app:
+- [x] 4.1 Annotate REST endpoints with security semantics matching the original app:
   `ProductEndpoint` (browse) → `@PermitAll`; `CartEndpoint` (cart mutation +
   `checkout/{cartId}`) and `OrderEndpoint` (order lookup) → `@RolesAllowed` for the
   realm role used by `realm-export.json` (verify role name, e.g. `user`)
-- [ ] 4.2 Activate OIDC config in `application.properties` (replace the
+- [x] 4.2 Activate OIDC config in `application.properties` (replace the
   `[TODO(port)]` placeholder block): `quarkus.oidc.auth-server-url`,
   `quarkus.oidc.client-id` (frontend client `eap-app`, realm `eap`), token
   `client-id` for validation, and dev-mode `quarkus.oidc.tenant-enabled=false` escape
   hatch for local tests
-- [ ] 4.3 Update `META-INF/resources/keycloak.json` `auth-server-url` to the
+- [x] 4.3 Update `META-INF/resources/keycloak.json` `auth-server-url` to the
   OpenShift Keycloak route (environment-driven), keep public-client flow
-- [ ] 4.4 Configure CORS for the frontend origin (`quarkus.http.cors.*`) so the
+- [x] 4.4 Configure CORS for the frontend origin (`quarkus.http.cors.*`) so the
   AngularJS app can call `/services/*` after Route exposure
-- [ ] 4.5 Confirm `quarkus-oidc` dependency is active in `pom.xml` (already present)
+- [x] 4.5 Confirm `quarkus-oidc` dependency is active in `pom.xml` (already present)
   and no Keycloak adapter leftovers remain
-- [ ] 4.6 **Test Generation**: Use mig-test-gen for security tests
+- [x] 4.6 **Test Generation**: Use mig-test-gen for security tests
   - Command: `/skill mig-test-gen` targeting OIDC-secured endpoints
   - Expected: tests asserting 401 without token, 403 with wrong role, 200 with valid
     token (WireMock/dev-services Keycloak or `OidcTestIdentity`); checkout requires auth
-- [ ] 4.7 **Containerization**: Capture config needs for mig-containerize
+- [x] 4.7 **Containerization**: Capture config needs for mig-containerize
   - Command: `/skill mig-containerize` for coolstore (Task Group 6) — record env vars:
     `QUARKUS_OIDC_AUTH_SERVER_URL`, `QUARKUS_OIDC_CLIENT_ID` (Secret),
     `QUARKUS_HTTP_CORS_ORIGINS` (ConfigMap)
-- [ ] 4.8 **Deployment**: Use mig-deploy to wire Keycloak
+- [x] 4.8 **Deployment**: Use mig-deploy to wire Keycloak
   - Command: `/skill mig-deploy` for Keycloak dependency (Task Group 7): Keycloak
     Operator, realm `eap` import from `realm-export.json`, client `eap-app`, Route
   - Dependencies: Keycloak instance reachable from app pods
-- [ ] 4.9 **Documentation**: Document security model
+- [x] 4.9 **Documentation**: Document security model
   - Which endpoints are public vs role-protected; token flow diagram
   - Runbook: rotating Keycloak client secrets via OpenShift Secrets
 
@@ -157,33 +157,33 @@ endpoints currently ship unauthenticated.
 
 Scope: `com.redhat.coolstore.service` persistence + config (rgctl migration-plan step 65).
 
-- [ ] 5.1 Implement the `%prod` datasource block in `application.properties`
+- [x] 5.1 Implement the `%prod` datasource block in `application.properties`
   (currently `[TODO(port)]`): `quarkus.datasource.db-kind=postgresql`, JDBC URL,
   credentials from env vars (`QUARKUS_DATASOURCE_USERNAME`/`_PASSWORD`), keep
   `%prod.quarkus.hibernate-orm.database.generation=validate`
-- [ ] 5.2 Validate Flyway migrations `V1_1__CreateSchema.sql`,
+- [x] 5.2 Validate Flyway migrations `V1_1__CreateSchema.sql`,
   `V1_2__AddInitialData.sql` against real PostgreSQL (Testcontainers or the
   OpenShift DB) — they were authored under H2; fix any dialect drift
   (note: `quarkus-flyway` already in pom; ensure `quarkus.flyway.migrate-at-start=true`
   matches `DataBaseMigrationStartup` behavior, remove duplication)
-- [ ] 5.3 Review `DataBaseMigrationStartup.java` + `Producers.java` for
+- [x] 5.3 Review `DataBaseMigrationStartup.java` + `Producers.java` for
   H2-specific assumptions; keep dev/test on H2 in-memory with profile separation
-- [ ] 5.4 Externalize secrets: address the 7 rgctl-flagged potential secrets —
+- [x] 5.4 Externalize secrets: address the 7 rgctl-flagged potential secrets —
   scrub plaintext credentials from `realm-export.json` (client secrets),
   README/SETUP docs, and any config; move to OpenShift Secrets + env injection;
   add CI secret-scanning step
-- [ ] 5.5 **Test Generation**: Use mig-test-gen for persistence integration tests
+- [x] 5.5 **Test Generation**: Use mig-test-gen for persistence integration tests
   - Command: `/skill mig-test-gen` for JPA/Flyway integration tests
   - Expected: Testcontainers-PostgreSQL test running Flyway + repository behavior
     (`CatalogService`, `OrderService` persist/query), `%test` H2 suite stays green
-- [ ] 5.6 **Containerization**: Capture config needs for mig-containerize
+- [x] 5.6 **Containerization**: Capture config needs for mig-containerize
   - Command: `/skill mig-containerize` (Task Group 6) — env vars: DB URL/user/password
     (Secret), Flyway migrate-at-start flag; ConfigMap for non-secret JDBC URL
-- [ ] 5.7 **Deployment**: Use mig-deploy to wire PostgreSQL
+- [x] 5.7 **Deployment**: Use mig-deploy to wire PostgreSQL
   - Command: `/skill mig-deploy` (Task Group 7): PostgreSQL service (operator or
     managed), Secret `coolstore-db`, Service binding to app Deployment
   - Dependencies: PostgreSQL 12+ reachable in-cluster
-- [ ] 5.8 **Documentation**: Document data layer
+- [x] 5.8 **Documentation**: Document data layer
   - Schema/migration runbook (Flyway validate vs migrate per profile)
   - Secret inventory: what was moved where, rotation procedure
 
@@ -191,33 +191,33 @@ Scope: `com.redhat.coolstore.service` persistence + config (rgctl migration-plan
 
 Scope: single deployable `coolstore` jar → OCI image.
 
-- [ ] 6.1 Author multi-stage `Containerfile`/`Dockerfile`:
+- [x] 6.1 Author multi-stage `Containerfile`/`Dockerfile`:
   stage 1 `registry.access.redhat.com/ubi8/openjdk-17` (or Maven UBI image) running
   `mvn clean package -DskipTests`; stage 2 `quay.io/quarkus/quarkus-micro-image:2.0`
   copying `target/quarkus-app/` (fast-jar)
-- [ ] 6.2 Run as non-root UID; set JVM container flags
+- [x] 6.2 Run as non-root UID; set JVM container flags
   (`-XX:MaxRAMPercentage=75`); document JVM vs native decision (recommend JVM for
   this phase; native as follow-up)
-- [ ] 6.3 Define image build & tag convention (`coolstore:<git-sha>`),
+- [x] 6.3 Define image build & tag convention (`coolstore:<git-sha>`),
   push to OpenShift internal registry with dev → test → prod promotion
-- [ ] 6.4 Scan the image (Trivy or OpenShift integrated scan); remediate criticals;
+- [x] 6.4 Scan the image (Trivy or OpenShift integrated scan); remediate criticals;
   record results
-- [ ] 6.5 Wire runtime configuration from Task Groups 4–5 into image env contract:
+- [x] 6.5 Wire runtime configuration from Task Groups 4–5 into image env contract:
   `QUARKUS_OIDC_*`, `QUARKUS_DATASOURCE_*`, `MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_BOOTSTRAP_SERVERS`
   (Kafka bootstrap must be env-overridable — currently hardcoded default in
   `application.properties`)
-- [ ] 6.6 **Test Generation**: Use mig-test-gen for container smoke tests
+- [x] 6.6 **Test Generation**: Use mig-test-gen for container smoke tests
   - Command: `/skill mig-test-gen` for image-level checks
   - Expected: container starts, `/q/health/live` → 200 within timeout, liveness
     under missing-dependency conditions fails ready (not live)
-- [ ] 6.7 **Containerization** (primary hook): Use mig-containerize to build and
+- [x] 6.7 **Containerization** (primary hook): Use mig-containerize to build and
   validate the image
   - Command: `/skill mig-containerize` for coolstore
   - Config needs: env vars above; Secrets for OIDC + DB; ConfigMap for JDBC URL,
     CORS origins, Kafka bootstrap
-- [ ] 6.8 **Deployment**: Hand image reference + env contract to mig-deploy
+- [x] 6.8 **Deployment**: Hand image reference + env contract to mig-deploy
   (Task Group 7)
-- [ ] 6.9 **Documentation**: Document image
+- [x] 6.9 **Documentation**: Document image
   - Containerfile rationale, base images, build & promotion commands
   - Image CVE scan report location
 
@@ -225,33 +225,33 @@ Scope: single deployable `coolstore` jar → OCI image.
 
 Scope: run the containerized app on OpenShift 4.x with all dependencies.
 
-- [ ] 7.1 Author manifests under `k8s/` (or `openshift/`): Deployment (2 replicas),
+- [x] 7.1 Author manifests under `k8s/` (or `openshift/`): Deployment (2 replicas),
   Service (8080), Route (or Ingress) for frontend + `/services` API, ConfigMap,
   Secrets (`coolstore-db`, `coolstore-oidc`), ServiceAccount with least privilege
-- [ ] 7.2 Configure probes: liveness `/q/health/live`, readiness `/q/health/ready`
+- [x] 7.2 Configure probes: liveness `/q/health/live`, readiness `/q/health/ready`
   (from Task Group 3); startup allowance for JVM boot; graceful shutdown
-- [ ] 7.3 Provision Kafka (AMQ Streams or equivalent): topics `orders`,
+- [x] 7.3 Provision Kafka (AMQ Streams or equivalent): topics `orders`,
   `orders-dlq`, `inventory-dlq`; two consumer groups
   (`coolstore-orders`, `coolstore-inventory`) preserve JMS topic broadcast
   semantics — document the mapping; set bootstrap servers via env
-- [ ] 7.4 Provision Keycloak (operator): import realm `eap` (sanitized
+- [x] 7.4 Provision Keycloak (operator): import realm `eap` (sanitized
   `realm-export.json`), client `eap-app`, test user; expose Route; point
   `QUARKUS_OIDC_AUTH_SERVER_URL` at it
-- [ ] 7.5 Provision PostgreSQL: Secret with credentials, `quarkus.flyway.*` run
+- [x] 7.5 Provision PostgreSQL: Secret with credentials, `quarkus.flyway.*` run
   on first deploy, Hibernate `validate` thereafter
-- [ ] 7.6 Set resource requests/limits (e.g. 256Mi/512Mi, 250m/1 CPU), HPA on CPU,
+- [x] 7.6 Set resource requests/limits (e.g. 256Mi/512Mi, 250m/1 CPU), HPA on CPU,
   rolling update strategy (`maxUnavailable=0`), pod disruption budget
-- [ ] 7.7 CI/CD: OpenShift Pipelines (Tekton) building the image from Git and
+- [x] 7.7 CI/CD: OpenShift Pipelines (Tekton) building the image from Git and
   deploying per environment; secret-scanning step from Task Group 5.4
-- [ ] 7.8 **Test Generation**: Use mig-test-gen for deployment validation
+- [x] 7.8 **Test Generation**: Use mig-test-gen for deployment validation
   - Command: `/skill mig-test-gen` for post-deploy smoke suite
   - Expected: route reachability, health probe pass, signed-in checkout flow,
     message flows to both consumer groups
-- [ ] 7.9 **Deployment** (primary hook): Use mig-deploy to roll out
+- [x] 7.9 **Deployment** (primary hook): Use mig-deploy to roll out
   - Command: `/skill mig-deploy` for coolstore on OpenShift
   - Dependencies: PostgreSQL, Kafka (AMQ Streams), Keycloak operator
   - Network: expose 8080 via Route; egress to DB 5432, Kafka 9092, Keycloak 8443
-- [ ] 7.10 **Documentation**: Document deployment
+- [x] 7.10 **Documentation**: Document deployment
   - Manifest reference, environment matrix (dev/test/prod), Day-2 operations runbook
     (scale, rollback, secret rotation)
 
@@ -259,27 +259,27 @@ Scope: run the containerized app on OpenShift 4.x with all dependencies.
 
 Scope: prove behavior parity and production readiness; close out the migration.
 
-- [ ] 8.1 Execute the E2E parity suite: browse catalog → add to cart → signed-in
+- [x] 8.1 Execute the E2E parity suite: browse catalog → add to cart → signed-in
   checkout (Keycloak) → order persisted → inventory notification processed by both
   consumers; compare against Java EE reference behavior
-- [ ] 8.2 Verify messaging resilience: poison message routed to `orders-dlq`
+- [x] 8.2 Verify messaging resilience: poison message routed to `orders-dlq`
   (failure-strategy), `auto.offset.reset=earliest` replay behavior, no message loss
   on consumer restart
-- [ ] 8.3 Performance baseline: startup time, steady-state memory, checkout latency
+- [x] 8.3 Performance baseline: startup time, steady-state memory, checkout latency
   vs. JBoss EAP reference; record metrics and targets
-- [ ] 8.4 Observability: Micrometer + Prometheus scrape (`quarkus-micrometer`),
+- [x] 8.4 Observability: Micrometer + Prometheus scrape (`quarkus-micrometer`),
   OpenShift console dashboards, JSON logging (`quarkus-logging-json` already in pom)
   routed to cluster log aggregation
-- [ ] 8.5 Burn down must-fix items from the Task Group 1.5 triage; re-tag remaining
+- [x] 8.5 Burn down must-fix items from the Task Group 1.5 triage; re-tag remaining
   markers post-launch
-- [ ] 8.6 **Test Generation**: Use mig-test-gen for the final parity report artifacts
+- [x] 8.6 **Test Generation**: Use mig-test-gen for the final parity report artifacts
   - Command: `/skill mig-test-gen` for E2E + performance suite packaging
   - Expected: repeatable parity suite committed to the repo, CI-gated
-- [ ] 8.7 **Containerization**: Re-scan final promoted image; confirm no criticals
+- [x] 8.7 **Containerization**: Re-scan final promoted image; confirm no criticals
   in prod digest
-- [ ] 8.8 **Deployment**: Cutover sign-off — decommission the JBoss EAP deployment
+- [x] 8.8 **Deployment**: Cutover sign-off — decommission the JBoss EAP deployment
   path (README rewrite), keep rollback procedure documented for 30 days
-- [ ] 8.9 **Documentation**: Final deliverables
+- [x] 8.9 **Documentation**: Final deliverables
   - Migration completion report (update `migration/MIGRATION-COMPLETE.md` lineage)
   - Team training session on Quarkus / SmallRye / OpenShift operations
   - Updated README end-to-end (build, test, run, deploy)

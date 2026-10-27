@@ -1922,5 +1922,12 @@
   },
   "clientPolicies": {
     "policies": []
+  },
+  "roles": {
+    "realm": [
+      {
+        "name": "user"
+      }
+    ]
   }
 }

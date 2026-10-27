@@ -3,46 +3,40 @@ package com.redhat.coolstore.service;
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
-import org.junit.Before;
-import org.junit.Test;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.jms.JMSContext;
-import javax.jms.JMSProducer;
-import javax.jms.Topic;
-import java.util.logging.Logger;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
+/**
+ * Characterization tests for ShoppingCartOrderProcessor (TG1.1).
+ *
+ * Replaces the Java EE 7 JMS test (JMSContext/JMSProducer/Topic mocks, javax.jms imports)
+ * with the SmallRye Reactive Messaging contract per RULEBOOK Pattern 1A:
+ * {@code process(ShoppingCart)} must send the cart's serialized JSON to the
+ * {@code @Channel("orders") Emitter<String>}.
+ */
 public class ShoppingCartOrderProcessorTest {
 
     @Mock
-    private JMSContext context;
-
-    @Mock
-    private Topic ordersTopic;
-
-    @Mock
-    private JMSProducer producer;
-
-    @Mock
-    private Logger log;
+    private Emitter<String> ordersEmitter;
 
     @InjectMocks
     private ShoppingCartOrderProcessor processor;
 
-    @Before
+    @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        when(context.createProducer()).thenReturn(producer);
+        MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    public void testProcessSendsMessageToTopic() {
+    private ShoppingCart oneItemCart() {
         ShoppingCart cart = new ShoppingCart();
         cart.setCartTotal(50.0);
 
@@ -55,11 +49,16 @@ public class ShoppingCartOrderProcessorTest {
         sci.setQuantity(1);
         sci.setPrice(34.99);
         cart.addShoppingCartItem(sci);
+        return cart;
+    }
+
+    @Test
+    public void testProcessSendsMessageToOrdersChannel() {
+        ShoppingCart cart = oneItemCart();
 
         processor.process(cart);
 
-        verify(context).createProducer();
-        verify(producer).send(eq(ordersTopic), anyString());
+        verify(ordersEmitter).send(anyString());
     }
 
     @Test
@@ -83,7 +82,7 @@ public class ShoppingCartOrderProcessorTest {
         processor.process(cart);
 
         ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
-        verify(producer).send(eq(ordersTopic), jsonCaptor.capture());
+        verify(ordersEmitter).send(jsonCaptor.capture());
 
         String json = jsonCaptor.getValue();
         assertTrue(json.contains("\"orderValue\""));

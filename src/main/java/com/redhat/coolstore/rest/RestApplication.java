@@ -3,15 +3,16 @@ package com.redhat.coolstore.rest;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
 
-// NOTE: File already uses jakarta.* imports (no javax→jakarta conversion needed)
-// TODO(port): [ARCH] Evaluate if this empty Application class is needed in Quarkus
-// (JAX-RS auto-discovers resources without explicit Application subclass)
-// TODO(port): [CONFIG] Evaluate migrating @ApplicationPath("/services") to
-// quarkus.rest.path in application.properties per RULEBOOK §7
-// TODO(port): [POM] Ensure quarkus-resteasy-reactive or quarkus-rest dependency
-// is configured in pom.xml for JAX-RS support
-// TODO(port): [TEST] Verify REST endpoint base path in tests if path configuration
-// moves to application.properties
+/**
+ * JAX-RS application.
+ *
+ * TG3.5 base-path decision (TODO(port) resolved): KEEP @ApplicationPath("/services").
+ * The AngularJS frontend (app/services/cart.js, app/services/catalog.js) calls
+ * /services/cart and /services/products using absolute paths, matching the original
+ * JBoss EAP deployment. Quarkus default routing would break the frontend contract.
+ * Health and metrics remain on Quarkus management paths (/q/health/*, /q/metrics);
+ * static resources are served from META-INF/resources at /.
+ */
 @ApplicationPath("/services")
 public class RestApplication extends Application {
 

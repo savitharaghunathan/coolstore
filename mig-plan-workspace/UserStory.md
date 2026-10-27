@@ -18,11 +18,11 @@
 - ## Task Group 1: Baseline Verification & Test Suite Restoration
 
 ### Acceptance Criteria
-- [ ] `mvn clean verify` completes with zero compilation errors and all tests passing
-- [ ] `ShoppingCartOrderProcessorTest` tests the SmallRye `@Channel`/`Emitter` contract (no `javax.jms` imports)
-- [ ] `mockito-junit-jupiter` present in `pom.xml` test scope
-- [ ] `@Transactional` verified present on `OrderServiceMDB` and `InventoryNotificationMDB` `@Incoming` methods
-- [ ] The 18 deferred port markers are triaged with owners and dispositions recorded
+- [x] `mvn clean verify` completes with zero compilation errors and all tests passing
+- [x] `ShoppingCartOrderProcessorTest` tests the SmallRye `@Channel`/`Emitter` contract (no `javax.jms` imports)
+- [x] `mockito-junit-jupiter` present in `pom.xml` test scope
+- [x] `@Transactional` verified present on `OrderServiceMDB` and `InventoryNotificationMDB` `@Incoming` methods
+- [x] The 18 deferred port markers are triaged with owners and dispositions recorded
 
 ### Details
 - **Priority:** High — blocks all other stories
@@ -64,11 +64,11 @@
 - ## Task Group 2: Legacy Artifact Cleanup & Code Hygiene
 
 ### Acceptance Criteria
-- [ ] `src/main/java/weblogic/application/*` shims deleted with startup behavior preserved via Quarkus events
-- [ ] `WEB-INF/web.xml` and `WEB-INF/beans.xml` deleted
-- [ ] `ShippingServiceRemote` deleted and `ShippingService` no longer implements it; tests stay green
-- [ ] Null-safety `BUG(port)` in `ShoppingCartService.initShoppingCartForPricing()` fixed
-- [ ] `rg "import javax\." src/` returns zero matches
+- [x] `src/main/java/weblogic/application/*` shims deleted with startup behavior preserved via Quarkus events
+- [x] `WEB-INF/web.xml` and `WEB-INF/beans.xml` deleted
+- [x] `ShippingServiceRemote` deleted and `ShippingService` no longer implements it; tests stay green
+- [x] Null-safety `BUG(port)` in `ShoppingCartService.initShoppingCartForPricing()` fixed
+- [x] `rg "import javax\." src/` returns zero matches
 
 ### Details
 - **Priority:** High
@@ -109,11 +109,11 @@
 - ## Task Group 3: Frontend Static Serving Migration
 
 ### Acceptance Criteria
-- [ ] `quarkus-smallrye-health` extension in `pom.xml`; `/q/health/live` and `/q/health/ready` return 200
-- [ ] Webapp assets served from `META-INF/resources/` with original absolute paths intact
-- [ ] `index.html` (converted from `index.jsp`) loads the app; no JSPs remain
-- [ ] REST base path decision (`/services` vs Quarkus default) made and frontend config aligned
-- [ ] Static smoke tests committed
+- [x] `quarkus-smallrye-health` extension in `pom.xml`; `/q/health/live` and `/q/health/ready` return 200
+- [x] Webapp assets served from `META-INF/resources/` with original absolute paths intact
+- [x] `index.html` (converted from `index.jsp`) loads the app; no JSPs remain
+- [x] REST base path decision (`/services` vs Quarkus default) made and frontend config aligned
+- [x] Static smoke tests committed
 
 ### Details
 - **Priority:** High
@@ -155,11 +155,11 @@
 - ## Task Group 4: Security Port — Keycloak OIDC
 
 ### Acceptance Criteria
-- [ ] `ProductEndpoint` is `@PermitAll`; `CartEndpoint` and `OrderEndpoint` enforce the realm role
-- [ ] OIDC configuration active in `application.properties` (no placeholder TODO block)
-- [ ] Unauthenticated checkout returns 401; wrong-role access returns 403
-- [ ] CORS configured for the frontend origin; `keycloak.json` points at the environment Keycloak
-- [ ] Security tests committed and green
+- [x] `ProductEndpoint` is `@PermitAll`; `CartEndpoint` and `OrderEndpoint` enforce the realm role
+- [x] OIDC configuration active in `application.properties` (no placeholder TODO block)
+- [x] Unauthenticated checkout returns 401; wrong-role access returns 403
+- [x] CORS configured for the frontend origin; `keycloak.json` points at the environment Keycloak
+- [x] Security tests committed and green
 
 ### Details
 - **Priority:** High — security gap blocks any external exposure
@@ -203,11 +203,11 @@
 - ## Task Group 5: Data & Configuration Hardening — Production PostgreSQL
 
 ### Acceptance Criteria
-- [ ] `%prod` PostgreSQL datasource configured via env vars; H2 confined to `%dev`/`%test`
-- [ ] Flyway migrations validated against real PostgreSQL (Testcontainers) and pass
-- [ ] Hibernate generation mode per profile: `update`/dev, `drop-and-create`/test, `validate`/prod
-- [ ] All 7 rgctl-flagged potential secrets removed from the repo and externalized
-- [ ] CI secret-scanning step active
+- [x] `%prod` PostgreSQL datasource configured via env vars; H2 confined to `%dev`/`%test`
+- [x] Flyway migrations validated against real PostgreSQL (Testcontainers) and pass
+- [x] Hibernate generation mode per profile: `update`/dev, `drop-and-create`/test, `validate`/prod
+- [x] All 7 rgctl-flagged potential secrets removed from the repo and externalized
+- [x] CI secret-scanning step active
 
 ### Details
 - **Priority:** High
@@ -251,11 +251,11 @@
 - ## Task Group 6: Containerization
 
 ### Acceptance Criteria
-- [ ] Multi-stage `Containerfile` builds from source; fast-jar runtime on a minimal base image
-- [ ] Container runs as non-root with container-aware JVM flags
-- [ ] Image tagged by git SHA; pushed to OpenShift internal registry
-- [ ] Image scan shows no critical vulnerabilities (or documented exceptions)
-- [ ] Runtime env contract (`QUARKUS_OIDC_*`, `QUARKUS_DATASOURCE_*`, Kafka bootstrap) validated
+- [x] Multi-stage `Containerfile` builds from source; fast-jar runtime on a minimal base image
+- [x] Container runs as non-root with container-aware JVM flags
+- [x] Image tagged by git SHA; pushed to OpenShift internal registry
+- [x] Image scan shows no critical vulnerabilities (or documented exceptions)
+- [x] Runtime env contract (`QUARKUS_OIDC_*`, `QUARKUS_DATASOURCE_*`, Kafka bootstrap) validated
 
 ### Details
 - **Priority:** Medium
@@ -299,12 +299,12 @@
 - ## Task Group 7: OpenShift Deployment
 
 ### Acceptance Criteria
-- [ ] Deployment (2 replicas), Service, Route, ConfigMap, Secrets, ServiceAccount committed under `k8s/`
-- [ ] Liveness/readiness probes wired to `/q/health/*`; rolling updates with zero-downtime config
-- [ ] Kafka topics `orders`, `orders-dlq`, `inventory-dlq` provisioned; both consumer groups active
-- [ ] Keycloak realm `eap` + client `eap-app` provisioned; app authenticates end-to-end
-- [ ] PostgreSQL provisioned with Flyway-run schema; resource limits and HPA configured
-- [ ] Tekton pipeline builds and deploys from Git
+- [x] Deployment (2 replicas), Service, Route, ConfigMap, Secrets, ServiceAccount committed under `k8s/`
+- [x] Liveness/readiness probes wired to `/q/health/*`; rolling updates with zero-downtime config
+- [x] Kafka topics `orders`, `orders-dlq`, `inventory-dlq` provisioned; both consumer groups active
+- [x] Keycloak realm `eap` + client `eap-app` provisioned; app authenticates end-to-end
+- [x] PostgreSQL provisioned with Flyway-run schema; resource limits and HPA configured
+- [x] Tekton pipeline builds and deploys from Git
 
 ### Details
 - **Priority:** Medium
@@ -348,12 +348,12 @@
 - ## Task Group 8: Validation, Parity & Observability
 
 ### Acceptance Criteria
-- [ ] E2E parity suite green: catalog → cart → authenticated checkout → order persisted → inventory processed
-- [ ] DLQ failure strategy demonstrated with a poison message; no message loss on consumer restart
-- [ ] Performance baseline recorded (startup, memory, checkout latency) vs. JBoss EAP reference
-- [ ] Micrometer/Prometheus metrics and JSON logs flowing to cluster observability stack
-- [ ] Must-fix marker burn-down complete; remaining markers re-tagged post-launch
-- [ ] Final image re-scanned clean; JBoss deployment path decommissioned with 30-day rollback documented
+- [x] E2E parity suite green: catalog → cart → authenticated checkout → order persisted → inventory processed
+- [x] DLQ failure strategy demonstrated with a poison message; no message loss on consumer restart
+- [x] Performance baseline recorded (startup, memory, checkout latency) vs. JBoss EAP reference
+- [x] Micrometer/Prometheus metrics and JSON logs flowing to cluster observability stack
+- [x] Must-fix marker burn-down complete; remaining markers re-tagged post-launch
+- [x] Final image re-scanned clean; JBoss deployment path decommissioned with 30-day rollback documented
 
 ### Details
 - **Priority:** Medium

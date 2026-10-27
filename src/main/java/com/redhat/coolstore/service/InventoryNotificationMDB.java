@@ -43,7 +43,7 @@ public class InventoryNotificationMDB {
    *
    * @param orderStr the order JSON string from Kafka message
    */
-  @Incoming("inventory-updates")
+  @Incoming("inventory")
   @Transactional
   public void processUpdate(String orderStr) {
     try {

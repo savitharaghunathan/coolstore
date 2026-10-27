@@ -16,8 +16,8 @@ This repository has the complete coolstore monolith built as a Java EE 7 applica
 ```
 podman run --name myPostgresDb \
    -p 5432:5432 \
-   -e POSTGRES_USER=postgresUser \
-   -e POSTGRES_PASSWORD=postgresPW \
+   -e POSTGRES_USER=${POSTGRES_USER:?set-me} \
+   -e POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?set-me} \
    -e POSTGRES_DB=postgresDB \
    -d postgres
 ```
@@ -105,13 +105,13 @@ Run the following commands:
 ```
 
 ```
- data-source add --name=CoolstoreDS --jndi-name=java:jboss/datasources/CoolstoreDS --driver-name=postgresql --connection-url=jdbc:postgresql://127.0.0.1:5432/postgresDB --user-name=postgresUser --password=postgresPW
+ data-source add --name=CoolstoreDS --jndi-name=java:jboss/datasources/CoolstoreDS --driver-name=postgresql --connection-url=jdbc:postgresql://127.0.0.1:5432/postgresDB --user-name=${POSTGRES_USER:?set-me} --password=${POSTGRES_PASSWORD:?set-me}
  ```
 
 ```
 jms-topic add --topic-address=topic.orders --entries=topic/orders
 
-/subsystem=messaging-activemq/server=default:write-attribute(name=cluster-password, value=password)
+/subsystem=messaging-activemq/server=default:write-attribute(name=cluster-password, value=${CLUSTER_PASSWORD:?set-me})
 ```
 
 ## Build and deploy the application
@@ -180,3 +180,40 @@ If you perform a test checkout of an item, you should see both nodes processing 
 
 
 ```
+---
+
+## Running CoolStore on Quarkus (post-migration)
+
+The Java EE 7 / JBoss EAP instructions above are retained for the 30-day rollback window
+(TG8.8) only. The application now runs on **Quarkus 3.8.1** (Java 11).
+
+### Build and test
+```
+mvn clean verify
+```
+
+### Run locally (dev profile: H2 in-memory + in-memory Kafka)
+```
+mvn quarkus:dev
+```
+- Storefront: `http://localhost:8080/` (AngularJS app served from `META-INF/resources`, TG3)
+- REST API base path: `/services` (kept for frontend parity, TG3.5) — e.g. `GET /services/products`
+- Health: `/q/health/live`, `/q/health/ready` (replaced `health.jsp`, TG3.4)
+- Metrics: `/q/metrics` (Micrometer/Prometheus, TG8.4)
+
+### Production profile (%prod: PostgreSQL + Kafka, Flyway-managed schema)
+Configure via environment variables — never commit credentials:
+`QUARKUS_DATASOURCE_JDBC_URL`, `QUARKUS_DATASOURCE_USERNAME`, `QUARKUS_DATASOURCE_PASSWORD`,
+`KAFKA_BOOTSTRAP_SERVERS`, `QUARKUS_OIDC_AUTH_SERVER_URL`, `QUARKUS_OIDC_CLIENT_ID`,
+`QUARKUS_HTTP_CORS_ORIGINS`.
+
+### Migration notes
+- WebLogic compatibility layer, WAR descriptors (`web.xml`, `beans.xml`) and the
+  `ShippingServiceRemote` interface were removed (TG2); startup hooks now use Quarkus
+  `@Observes StartupEvent` (`StartupListener`).
+- Security (TG4): catalog browsing is `@PermitAll`; cart and order endpoints require the
+  Keycloak realm role `user` (realm `eap`, frontend public client `eap-app`). The realm
+  export (`realm-export.json`) includes the `user` realm role for provisioning.
+- Container image: multi-stage `Containerfile`, non-root UID (TG6).
+- OpenShift manifests: `k8s/` (Deployment, Service, Route, probes, HPA, Kafka topics,
+  Tekton pipeline) (TG7).

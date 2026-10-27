@@ -126,8 +126,10 @@ public class ShoppingCartService implements java.io.Serializable {
         sc.setShippingPromoSavings(0);
         sc.setCartTotal(0);
 
-        // [BUG(port)]: Null safety violation - initShoppingCartForPricing assumes getShoppingCartItemList() != null.
-        // Line 93 guards with null check; this loop does not. Applied null check per RULEBOOK §6 defensive programming.
+        // Null-safety guard (TG2.4, BUG(port) RESOLVED): the ShoppingCart model never
+        // returns a null item list (field initializes to an empty ArrayList and
+        // setShoppingCartItemList null-guards), but the defensive check is retained
+        // per RULEBOOK §6 and matches the null-guard pattern used at line 93.
         if (sc.getShoppingCartItemList() != null && sc.getShoppingCartItemList().size() > 0) {
             for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
                 Product p = getProduct(sci.getProduct().getItemId());
