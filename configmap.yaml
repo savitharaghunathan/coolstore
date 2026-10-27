@@ -1,0 +1,18 @@
+# CoolStore non-sensitive runtime configuration (containerize stage).
+# Consumed by deployment.yaml via envFrom.configMapRef. No credentials here.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coolstore-config
+  labels:
+    app: coolstore
+    app.kubernetes.io/part-of: coolstore
+data:
+  # %prod datasource — credentials live in coolstore-secrets, not here
+  QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/coolstore
+  # Strimzi Kafka cluster bootstrap (see kafka.yaml)
+  KAFKA_BOOTSTRAP_SERVERS: my-cluster-kafka-bootstrap:9092
+  # Keycloak realm 'eap' (see keycloak.yaml) — in-cluster service URL
+  COOLSTORE_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/eap
+  # SPA origin — tighten to the Route URL in production
+  COOLSTORE_CORS_ORIGINS: "*"

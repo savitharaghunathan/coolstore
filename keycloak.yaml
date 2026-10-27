@@ -1,0 +1,84 @@
+# Keycloak 20 with realm import (containerize stage).
+# Realm JSON is NOT embedded here (59KB; defaults must be rotated at provisioning):
+#   oc create configmap keycloak-realm --from-file=realm-export.json=realm-export.json
+# Admin credentials (create out-of-band — never commit real values):
+#   oc create secret generic keycloak-admin \
+#     --from-literal=KEYCLOAK_ADMIN=... --from-literal=KEYCLOAK_ADMIN_PASSWORD=...
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coolstore
+      name: keycloak
+  template:
+    metadata:
+      labels:
+        app: coolstore
+        name: keycloak
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:20.0
+          args: ["start-dev", "--import-realm"]   # production: start --optimized + TLS
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: KEYCLOAK_ADMIN
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin
+                  key: KEYCLOAK_ADMIN
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-admin
+                  key: KEYCLOAK_ADMIN_PASSWORD
+          readinessProbe:
+            httpGet:
+              path: /realms/eap
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          volumeMounts:
+            - name: realm
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+      volumes:
+        - name: realm
+          configMap:
+            name: keycloak-realm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  labels:
+    app: coolstore
+spec:
+  selector:
+    app: coolstore
+    name: keycloak
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

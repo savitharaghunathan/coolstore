@@ -18,7 +18,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd'T'HHmmss</maven.build.timestamp.format>
         <project.encoding>UTF-8</project.encoding>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.release>17</maven.compiler.release>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.8.1</quarkus.platform.version>
@@ -70,17 +70,21 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-logging-json</artifactId>
         </dependency>
-        <!-- Keycloak/OIDC Integration [TODO(port): Keycloak realm/client setup required] -->
+        <!-- Keycloak/OIDC Integration - config activated in application.properties (TG4):
+             quarkus.oidc.* with COOLSTORE_OIDC_SECRET env placeholder -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc</artifactId>
         </dependency>
-        <!-- [TODO(port): Audit Logging Library - custom dependency needs repository setup or mvn install:install-file to local Maven repo] -->
-        <!-- <dependency>
-            <groupId>com.enterprise</groupId>
-            <artifactId>audit-logging-library</artifactId>
-            <version>1.0.0</version>
-        </dependency> -->
+        <!-- Audit Logging (TG6): the private lib/audit-logging-library JAR is not in
+             Maven Central. Decision (recorded in migration notes): replace with
+             SLF4J-based structured audit events captured by quarkus-logging-json.
+             No file:// or private-registry dependency required. -->
+        <!-- Health endpoints /q/health + /q/health/ready (TG7.3, replaces health.jsp) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -97,10 +101,18 @@
             <artifactId>quarkus-test-h2</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- [TODO(port): Ensure application.properties has %test.quarkus.datasource.db-kind=h2 to activate H2 for tests] -->
+        <!-- [Resolved - TG1.3] %test profile already activates H2 via
+             %test.quarkus.datasource.jdbc.url in application.properties -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Mockito JUnit 5 extension (@ExtendWith(MockitoExtension.class)) for the
+             converted JUnit 5 test suite (migration plan TG2) -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Kafka Testing: in-memory connector for @Incoming/@Outgoing methods -->
@@ -129,7 +141,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Java Compiler: Java 11 target for Quarkus 3.x -->
+            <!-- Java Compiler: Java 17 target (Quarkus 3.8.1 LTS; TG1.2) -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
@@ -152,6 +164,19 @@
         </plugins>
     </build>
     <profiles>
-        <!-- [TODO(port): OpenShift profile with native image build configuration] -->
+        <!-- Native-image evaluation profile (TG8.3): build with -Pnative.
+             JVM mode is the production default; native is opt-in for later evaluation. -->
+        <profile>
+            <id>native</id>
+            <activation>
+                <property>
+                    <name>native</name>
+                </property>
+            </activation>
+            <properties>
+                <quarkus.package.type>native</quarkus.package.type>
+                <quarkus.native.enabled>true</quarkus.native.enabled>
+            </properties>
+        </profile>
     </profiles>
 </project>

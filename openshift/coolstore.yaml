@@ -1,0 +1,71 @@
+# CoolStore app manifests (migration TG9.1). Apply order: see openshift/README.md
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coolstore
+  labels: {app: coolstore, app.kubernetes.io/part-of: coolstore}
+spec:
+  replicas: 2   # sticky-session requirement documented (ShoppingCartService @SessionScoped) — see migration notes
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}
+  selector:
+    matchLabels: {app: coolstore}
+  template:
+    metadata:
+      labels: {app: coolstore, app.kubernetes.io/part-of: coolstore}
+    spec:
+      containers:
+        - name: coolstore
+          image: quay.io/coolstore/coolstore:dev   # internal OpenShift registry tag
+          ports: [{containerPort: 8080}]
+          envFrom:
+            - configMapRef: {name: coolstore-config}
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              valueFrom: {secretKeyRef: {name: coolstore-secrets, key: db-username}}
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              valueFrom: {secretKeyRef: {name: coolstore-secrets, key: db-password}}
+            - name: COOLSTORE_OIDC_SECRET
+              valueFrom: {secretKeyRef: {name: coolstore-secrets, key: oidc-client-secret}}
+          livenessProbe:
+            httpGet: {path: /q/health, port: 8080}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet: {path: /q/health/ready, port: 8080}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 250m, memory: 512Mi}
+            limits: {cpu: "1", memory: 1Gi}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coolstore
+  labels: {app: coolstore}
+spec:
+  selector: {app: coolstore}
+  ports: [{port: 8080, targetPort: 8080}]
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: coolstore
+  labels: {app: coolstore}
+spec:
+  to: {kind: Service, name: coolstore}
+  port: {targetPort: 8080}
+  tls: {termination: edge}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coolstore-config
+  labels: {app: coolstore}
+data:
+  QUARKUS_DATASOURCE_URL: jdbc:postgresql://postgresql:5432/coolstore
+  KAFKA_BOOTSTRAP_SERVERS: my-cluster-kafka-bootstrap:9092
+  COOLSTORE_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/eap
+  COOLSTORE_CORS_ORIGINS: "*"   # tighten to the Route URL in production

@@ -1,0 +1,70 @@
+# Local development environment (containerize stage) — mirrors the OpenShift
+# deployment: app + PostgreSQL + Kafka + Keycloak. Usage:
+#   podman-compose up -d && podman-compose logs -f app
+#   curl -sf http://localhost:8080/q/health
+#   curl -sf http://localhost:8080/services/rest/products | head -c 300
+#   podman-compose down        (add -v to reset the database volume)
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: coolstore:dev
+    ports:
+      - "8080:8080"
+    environment:
+      QUARKUS_DATASOURCE_URL: jdbc:postgresql://db:5432/coolstore
+      QUARKUS_DATASOURCE_USERNAME: coolstore
+      QUARKUS_DATASOURCE_PASSWORD: coolstore
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      COOLSTORE_OIDC_AUTH_SERVER_URL: http://keycloak:8080/realms/eap
+      COOLSTORE_OIDC_SECRET: changeme-at-provisioning
+      COOLSTORE_CORS_ORIGINS: "*"
+    depends_on:
+      - db
+      - kafka
+      - keycloak
+
+  db:
+    image: registry.redhat.io/rhel9/postgresql-15:latest   # needs registry.redhat.io login
+    environment:
+      POSTGRESQL_USER: coolstore
+      POSTGRESQL_PASSWORD: coolstore
+      POSTGRESQL_DATABASE: coolstore
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/pgsql/data
+
+  kafka:
+    # Single-node KRaft broker (same Kafka version family as the Strimzi cluster)
+    image: quay.io/strimzi-kafka/kafka:latest-kafka-3.7.0
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:20.0
+    command: ["start-dev", "--import-realm"]
+    ports:
+      - "8081:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin   # dev only — rotate realm defaults for anything shared
+    volumes:
+      - ./realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+
+volumes:
+  postgres-data:

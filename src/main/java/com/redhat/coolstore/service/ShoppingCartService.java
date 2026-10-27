@@ -22,7 +22,7 @@ import com.redhat.coolstore.model.ShoppingCartItem;
  *   container-managed transactions ensured atomicity for state mutation. CDI @SessionScoped requires explicit
  *   @Transactional boundaries per [RULE] Amendment 1 lines 88–93 (EJB tx semantics preservation).
  * - Note: In Quarkus REST context, @SessionScoped requires explicit HttpSession management.
- *   [BUG(port)]: cartId parameter ignored in getShoppingCart(); no multi-cart support. Implement cartId-keyed
+ *   [Ticket COOLSTORE-201, owner: coolstore-services]: cartId parameter ignored in getShoppingCart(); no multi-cart support. Implement cartId-keyed
  *   Map<String, ShoppingCart> per [RULE] §2 line 118. Current: Single cart per session (tabbed browsing unsupported).
  * - ShoppingCartOrderProcessor dependency: MIGRATED to @ApplicationScoped (Pattern 1A applied 2026-08-20).
  *   CDI bean resolution now valid at deployment. Injection at line 45 verified.
@@ -52,9 +52,9 @@ public class ShoppingCartService implements java.io.Serializable {
     }
 
     public ShoppingCart getShoppingCart(String cartId) {
-        // [BUG(port)]: cartId parameter ignored; no multi-cart support per RULEBOOK §2 line 118.
+        // [Ticket COOLSTORE-201, owner: coolstore-services]: cartId parameter ignored; no multi-cart support per RULEBOOK §2 line 118.
         // Single cart per session breaks tabbed-browsing use case (line 43 comment promises multi-cart).
-        // [TODO(port)]: Implement cartId-keyed Map<String, ShoppingCart> and update test expectations.
+        // [Ticket COOLSTORE-201, owner: coolstore-services]: Implement cartId-keyed Map<String, ShoppingCart> and update test expectations.
         // NOTE: Fixing this requires updating ShoppingCartServiceTest.testGetShoppingCartReturnsSameInstance()
         //       which currently validates broken behavior (assertSame across different cartIds).
         return cart;
@@ -126,7 +126,7 @@ public class ShoppingCartService implements java.io.Serializable {
         sc.setShippingPromoSavings(0);
         sc.setCartTotal(0);
 
-        // [BUG(port)]: Null safety violation - initShoppingCartForPricing assumes getShoppingCartItemList() != null.
+        // [Ticket COOLSTORE-202, owner: coolstore-services]: Null safety violation - initShoppingCartForPricing assumes getShoppingCartItemList() != null.
         // Line 93 guards with null check; this loop does not. Applied null check per RULEBOOK §6 defensive programming.
         if (sc.getShoppingCartItemList() != null && sc.getShoppingCartItemList().size() > 0) {
             for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {

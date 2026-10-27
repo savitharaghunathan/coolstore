@@ -3,19 +3,31 @@ package com.redhat.coolstore.service;
 import com.redhat.coolstore.model.CatalogItemEntity;
 import com.redhat.coolstore.model.InventoryEntity;
 import com.redhat.coolstore.model.Product;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * ProductServiceTest - JUnit 5 migration from JUnit 4 (mechanical conversion).
+ *
+ * Migration notes:
+ * - JUnit 4 @Test -> org.junit.jupiter.api.Test
+ * - JUnit 4 @Before setUp() with MockitoAnnotations.initMocks(this) replaced by
+ *   @ExtendWith(MockitoExtension.class), which creates the @Mock instances and performs
+ *   the @InjectMocks injection (mockito-junit-jupiter, already in pom.xml).
+ * - JUnit 4 Assert.* -> org.junit.jupiter.api.Assertions.*
+ * - Test methods, fixtures and assertion values unchanged.
+ */
+@ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 
     @Mock
@@ -23,11 +35,6 @@ public class ProductServiceTest {
 
     @InjectMocks
     private ProductService productService;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     private CatalogItemEntity createEntity(String id, String name, double price) {
         CatalogItemEntity e = new CatalogItemEntity();

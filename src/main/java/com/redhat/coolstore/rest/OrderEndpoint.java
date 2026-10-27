@@ -12,14 +12,20 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.annotation.security.RolesAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.redhat.coolstore.model.Order;
 import com.redhat.coolstore.service.OrderService;
 
+/**
+ * Order endpoint. Security preserved from the Java EE original (TG4.3):
+ * order history requires an authenticated user with role "user".
+ */
 @ApplicationScoped
 @Path("/orders")
+@RolesAllowed("user")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class OrderEndpoint {

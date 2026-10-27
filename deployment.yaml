@@ -1,0 +1,100 @@
+# CoolStore app Deployment (containerize stage — hardened per mig-containerize skill).
+# Image: built from repo-root Dockerfile; retag/push to your registry (internal
+# OpenShift registry or quay.io) and update `image` below before deploying.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coolstore
+  labels:
+    app: coolstore
+    app.kubernetes.io/part-of: coolstore
+    app.kubernetes.io/name: coolstore
+spec:
+  replicas: 2   # sticky sessions required until COOLSTORE-201 (see service.yaml)
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: coolstore
+  template:
+    metadata:
+      labels:
+        app: coolstore
+        app.kubernetes.io/part-of: coolstore
+        app.kubernetes.io/name: coolstore
+    spec:
+      # Pod-level security context (restricted-v2 compatible)
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: coolstore
+          image: quay.io/coolstore/coolstore:1.0.0   # replace with your registry tag
+          imagePullPolicy: Always
+          # Container-level security context
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 185          # default non-root user of UBI OpenJDK images
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          # Non-sensitive config from ConfigMap; credentials from Secret below
+          envFrom:
+            - configMapRef:
+                name: coolstore-config
+          env:
+            - name: QUARKUS_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: coolstore-secrets
+                  key: db-username
+            - name: QUARKUS_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: coolstore-secrets
+                  key: db-password
+            - name: COOLSTORE_OIDC_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: coolstore-secrets
+                  key: oidc-client-secret
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /q/health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          # Writable /tmp for the JVM (root filesystem is read-only)
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

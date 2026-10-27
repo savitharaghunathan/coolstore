@@ -12,7 +12,7 @@ public class ShoppingCartTest {
 
     @BeforeEach
     public void setUp() {
-        // TODO(port): ShoppingCart is now a @Dependent CDI bean. Consider injecting via @Inject
+        // Ticket COOLSTORE-203, owner: coolstore-services): ShoppingCart is now a @Dependent CDI bean. Consider injecting via @Inject
         // to validate CDI scope lifecycle behavior, per RULEBOOK.md Section 2 (EJB → CDI Conversion).
         // Currently tests POJO behavior only, not CDI container integration.
         cart = new ShoppingCart();

@@ -1,7 +1,7 @@
 package com.redhat.coolstore.model;
 
 // MIGRATION: JUnit 4 → JUnit 5
-// Changed imports from org.junit.Test and org.junit.Assert to org.junit.jupiter.api
+// Changed JUnit 4 imports (Test and Assert) to org.junit.jupiter.api
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
