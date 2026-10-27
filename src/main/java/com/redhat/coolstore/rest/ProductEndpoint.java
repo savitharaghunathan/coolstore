@@ -10,14 +10,20 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import jakarta.annotation.security.PermitAll;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.service.ProductService;
 
+/**
+ * Catalog browse endpoint. Anonymous access preserved from the Java EE original
+ * (TG4.3): product browsing is public; cart/checkout/order require the "user" role.
+ */
 @ApplicationScoped
 @Path("/products")
+@PermitAll
 @Produces(MediaType.APPLICATION_JSON)
 public class ProductEndpoint {
 

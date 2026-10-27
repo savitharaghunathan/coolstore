@@ -2,17 +2,33 @@ package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.ShoppingCart;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.logging.Logger;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * ShoppingCartServiceTest - JUnit 5 migration from JUnit 4 (mechanical conversion).
+ *
+ * Migration notes:
+ * - JUnit 4 @Test -> org.junit.jupiter.api.Test
+ * - JUnit 4 @Before setUp() with MockitoAnnotations.initMocks(this) replaced by
+ *   @ExtendWith(MockitoExtension.class) (mock creation + @InjectMocks injection;
+ *   mockito-junit-jupiter already in pom.xml).
+ * - JUnit 4 Assert.* -> org.junit.jupiter.api.Assertions.*
+ * - The java.util.logging.Logger @Mock from the original file is retained for fidelity;
+ *   the Quarkus ShoppingCartService uses a static final SLF4J logger, so this mock is
+ *   simply not injected anywhere (an unused @Mock does not violate MockitoExtension
+ *   strict stubs - only unused stubbings do).
+ * - Test methods, fixtures and assertion values unchanged.
+ */
+@ExtendWith(MockitoExtension.class)
 public class ShoppingCartServiceTest {
 
     @Mock
@@ -29,11 +45,6 @@ public class ShoppingCartServiceTest {
 
     @InjectMocks
     private ShoppingCartService shoppingCartService;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @Test
     public void testGetShoppingCartReturnsCart() {

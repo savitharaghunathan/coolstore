@@ -24,7 +24,7 @@ import java.util.Optional;
  *
  * Configuration required in application.properties:
  *   quarkus.kafka.bootstrap.servers=localhost:9092
- *   mp.messaging.incoming.inventory-updates.connector=smallrye-kafka
+ *   mp.messaging.incoming.inventory.connector=smallrye-kafka
  *   inventory.notification.threshold=50
  */
 @ApplicationScoped
@@ -43,7 +43,7 @@ public class InventoryNotificationMDB {
    *
    * @param orderStr the order JSON string from Kafka message
    */
-  @Incoming("inventory-updates")
+  @Incoming("inventory")
   @Transactional
   public void processUpdate(String orderStr) {
     try {

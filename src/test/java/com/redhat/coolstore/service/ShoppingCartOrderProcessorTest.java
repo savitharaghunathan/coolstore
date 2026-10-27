@@ -3,43 +3,48 @@ package com.redhat.coolstore.service;
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
-import org.junit.Before;
-import org.junit.Test;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.jms.JMSContext;
-import javax.jms.JMSProducer;
-import javax.jms.Topic;
-import java.util.logging.Logger;
-
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * ShoppingCartOrderProcessorTest - JUnit 5 migration from JUnit 4 + messaging port.
+ *
+ * Migration notes:
+ * - JUnit 4 @Test -> org.junit.jupiter.api.Test
+ * - JUnit 4 Assert.* -> org.junit.jupiter.api.Assertions.*
+ * - @Before setUp() with MockitoAnnotations.initMocks(this) and the JMS stub
+ *   (when(context.createProducer()).thenReturn(producer)) replaced by
+ *   @ExtendWith(MockitoExtension.class) (mock creation + @InjectMocks injection).
+ * - javax.jms JMSContext/JMSProducer/Topic mocks REMOVED: ShoppingCartOrderProcessor
+ *   was ported from JMS (topic producer) to SmallRye Reactive Messaging
+ *   @Inject @Channel("orders") Emitter<String> (Kafka connector). The single
+ *   @Mock Emitter<String> is injected into the processor's {@code orders} field by
+ *   type via @InjectMocks (Mockito injects the only Emitter-typed mock regardless of
+ *   field name).
+ * - The java.util.logging.Logger mock was removed: the ported processor uses a
+ *   static final SLF4J logger (not injectable, never used by the test).
+ * - Verification updated from verify(producer).send(eq(ordersTopic), anyString()) to
+ *   verify(ordersEmitter).send(anyString()) - matching
+ *   ShoppingCartOrderProcessor.process(), which calls
+ *   orders.send(Transformers.shoppingCartToJson(cart)).
+ * - Test method names, cart fixtures and JSON assertion values unchanged.
+ */
+@ExtendWith(MockitoExtension.class)
 public class ShoppingCartOrderProcessorTest {
 
     @Mock
-    private JMSContext context;
-
-    @Mock
-    private Topic ordersTopic;
-
-    @Mock
-    private JMSProducer producer;
-
-    @Mock
-    private Logger log;
+    private Emitter<String> ordersEmitter;
 
     @InjectMocks
     private ShoppingCartOrderProcessor processor;
-
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        when(context.createProducer()).thenReturn(producer);
-    }
 
     @Test
     public void testProcessSendsMessageToTopic() {
@@ -58,8 +63,7 @@ public class ShoppingCartOrderProcessorTest {
 
         processor.process(cart);
 
-        verify(context).createProducer();
-        verify(producer).send(eq(ordersTopic), anyString());
+        verify(ordersEmitter).send(anyString());
     }
 
     @Test
@@ -83,7 +87,7 @@ public class ShoppingCartOrderProcessorTest {
         processor.process(cart);
 
         ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
-        verify(producer).send(eq(ordersTopic), jsonCaptor.capture());
+        verify(ordersEmitter).send(jsonCaptor.capture());
 
         String json = jsonCaptor.getValue();
         assertTrue(json.contains("\"orderValue\""));

@@ -1,0 +1,46 @@
+# Kafka via AMQ Streams / Strimzi (migration TG9.3).
+# Consumer groups coolstore-orders and coolstore-inventory stay distinct in app config
+# (topic broadcast semantics); DLQ topics provisioned here.
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: my-cluster
+  labels: {app: coolstore}
+spec:
+  kafka:
+    replicas: 1   # scale to 3 for production
+    listeners:
+      - name: plain
+        port: 9092
+        type: internal
+        tls: false
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+    storage:
+      type: ephemeral
+  zookeeper:
+    replicas: 1
+    storage: {type: ephemeral}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: orders
+  labels: {strimzi.io/cluster: my-cluster, app: coolstore}
+spec: {partitions: 3, replicas: 1}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: orders-dlq
+  labels: {strimzi.io/cluster: my-cluster, app: coolstore}
+spec: {partitions: 1, replicas: 1}
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: inventory-dlq
+  labels: {strimzi.io/cluster: my-cluster, app: coolstore}
+spec: {partitions: 1, replicas: 1}

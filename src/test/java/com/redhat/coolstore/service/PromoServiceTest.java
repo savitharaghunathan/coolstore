@@ -16,8 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * Migration notes:
  * - @Before → @BeforeEach
- * - org.junit.Test → org.junit.jupiter.api.Test
- * - org.junit.Assert → org.junit.jupiter.api.Assertions
+ * - JUnit 4 @Test → org.junit.jupiter.api.Test
+ * - JUnit 4 Assert → org.junit.jupiter.api.Assertions
  *
  * DEPENDENCY ORDERING (Reviewer Finding #3): Promotion.java is still status=TODO in manifest.
  * This test hard-asserts on Promotion's exact field shape (getItemId(), getPercentOff()).

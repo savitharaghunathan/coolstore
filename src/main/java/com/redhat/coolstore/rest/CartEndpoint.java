@@ -14,14 +14,21 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.annotation.security.RolesAllowed;
 
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
 import com.redhat.coolstore.service.ShoppingCartService;
 
+/**
+ * Cart endpoint. Security preserved from the Java EE original (TG4.3):
+ * cart/checkout operations require an authenticated user with role "user"
+ * (Keycloak realm "eap", client "coolstore" — see application.properties OIDC config).
+ */
 @SessionScoped
 @Path("/cart")
+@RolesAllowed("user")
 public class CartEndpoint {
 
 	@Inject
