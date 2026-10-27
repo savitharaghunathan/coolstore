@@ -1,0 +1,29 @@
+# Keep the build context minimal: only pom.xml + src/ are needed to build the
+# image (the AngularJS storefront under src/main/resources/META-INF/resources,
+# including bower_components, IS required at runtime and is therefore kept).
+.git
+.gitignore
+.rgctl
+.claude
+.idea
+.vscode
+.settings
+.classpath
+target
+k8s
+lib
+assets
+rules
+migration
+mig-execute-workspace
+mig-plan-workspace
+mig-prompt-workspace
+*.md
+*.log
+*.tsv
+realm-export.json
+Containerfile
+Dockerfile
+.dockerignore
+podman-compose.yml
+CONTAINERIZATION_REPORT.md

@@ -2,6 +2,7 @@ package com.redhat.coolstore.rest;
 
 import java.util.List;
 
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -20,6 +21,7 @@ import com.redhat.coolstore.service.OrderService;
 
 @ApplicationScoped
 @Path("/orders")
+@RolesAllowed("user")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class OrderEndpoint {

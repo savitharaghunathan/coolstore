@@ -1,0 +1,102 @@
+# CoolStore workload — MigIQ containerize stage.
+# Security-hardened per mig-containerize skill: non-root, read-only rootfs,
+# all capabilities dropped, seccomp RuntimeDefault, resource limits, probes.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coolstore
+  namespace: coolstore-dev
+  labels:
+    app: coolstore
+    version: v1
+    app.kubernetes.io/name: coolstore
+    app.kubernetes.io/part-of: coolstore
+    app.kubernetes.io/version: v1
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: coolstore
+  template:
+    metadata:
+      labels:
+        app: coolstore
+        version: v1
+        app.kubernetes.io/name: coolstore
+        app.kubernetes.io/part-of: coolstore
+    spec:
+      serviceAccountName: coolstore
+      terminationGracePeriodSeconds: 30
+      # Pod-level security context
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: coolstore
+          image: image-registry.openshift-image-registry.svc:5000/coolstore-dev/coolstore:latest
+          imagePullPolicy: Always
+          # Container-level security context (matches Dockerfile USER 1001)
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1001
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          # Env contract (TG6.5): ConfigMap + Secrets, nothing baked into the image.
+          envFrom:
+            - configMapRef:
+                name: coolstore-config
+            - secretRef:
+                name: coolstore-db
+            - secretRef:
+                name: coolstore-oidc
+          # Probes wired to SmallRye Health (replaced health.jsp in TG3.4).
+          # Readiness fails on missing DB/Kafka; liveness stays up (TG6.6).
+          startupProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 2
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          # Writable /tmp (JVM/Kafka client temp) — rootfs is read-only.
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

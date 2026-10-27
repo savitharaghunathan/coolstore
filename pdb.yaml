@@ -1,0 +1,16 @@
+# PodDisruptionBudget — MigIQ containerize stage.
+# Keeps at least one replica serving during node drains/updates.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: coolstore
+  namespace: coolstore-dev
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: coolstore
+    app.kubernetes.io/part-of: coolstore
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: coolstore

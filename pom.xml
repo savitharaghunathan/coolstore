@@ -70,10 +70,20 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-logging-json</artifactId>
         </dependency>
-        <!-- Keycloak/OIDC Integration [TODO(port): Keycloak realm/client setup required] -->
+        <!-- Keycloak/OIDC Integration (TG4: configuration activated in application.properties) -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc</artifactId>
+        </dependency>
+        <!-- SmallRye Health endpoints /q/health/live,/q/health/ready (TG3.1, TG7.2 probes) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
+        <!-- Micrometer + Prometheus metrics /q/metrics (TG8.4 observability) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
         </dependency>
         <!-- [TODO(port): Audit Logging Library - custom dependency needs repository setup or mvn install:install-file to local Maven repo] -->
         <!-- <dependency>
@@ -101,6 +111,27 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit 5 extension for Mockito (@ExtendWith(MockitoExtension.class), TG1.2) -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit 4 vintage engine (TG1.2/TG1.3): runs the pre-existing JUnit 4
+             characterization tests (ShoppingCartServiceTest, ProductServiceTest,
+             ProductEndpointTest) on the JUnit 5 platform without rewriting them,
+             preserving the parity baseline byte-for-byte. -->
+        <dependency>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Security tests (TG4.6): @TestSecurity test identities for @RolesAllowed endpoints -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-security</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Kafka Testing: in-memory connector for @Incoming/@Outgoing methods -->

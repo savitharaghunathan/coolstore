@@ -1,0 +1,184 @@
+# CoolStore OpenShift manifests (TG7.1–7.6)
+# Namespace-scoped resources. Apply with: oc apply -f k8s/ -n <namespace>
+# Kafka topic CRs require the AMQ Streams operator; Keycloak is provisioned by the
+# Keycloak Operator importing realm `eap` (realm-export.json, incl. `user` realm role);
+# PostgreSQL via the database operator or managed service (Secret coolstore-db below).
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: coolstore
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coolstore-config
+data:
+  QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://postgresql:5432/coolstore
+  KAFKA_BOOTSTRAP_SERVERS: my-cluster-kafka-bootstrap:9092
+  QUARKUS_HTTP_CORS_ORIGINS: https://coolstore-dev.apps.example.com
+---
+# Template only — create real secrets out-of-band (oc create secret ...) so that no
+# credential ever lands in Git (TG5.4). Pipeline (tekton) runs the secret scan.
+apiVersion: v1
+kind: Secret
+metadata:
+  name: coolstore-db
+type: Opaque
+stringData:
+  QUARKUS_DATASOURCE_USERNAME: REPLACE_ME
+  QUARKUS_DATASOURCE_PASSWORD: REPLACE_ME
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: coolstore-oidc
+type: Opaque
+stringData:
+  QUARKUS_OIDC_AUTH_SERVER_URL: https://keycloak:8443/realms/eap
+  QUARKUS_OIDC_CLIENT_ID: eap-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coolstore
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: coolstore
+  template:
+    metadata:
+      labels:
+        app: coolstore
+    spec:
+      serviceAccountName: coolstore
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: coolstore
+          image: image-registry.openshift-image-registry.svc:5000/coolstore-dev/coolstore:latest
+          ports:
+            - containerPort: 8080
+          # Probes (TG7.2) wired to SmallRye Health (replaced health.jsp, TG3.4).
+          # Readiness fails on missing DB/Kafka deps; liveness stays up (TG6.6).
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          startupProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            failureThreshold: 30
+            periodSeconds: 2
+          envFrom:
+            - configMapRef:
+                name: coolstore-config
+            - secretRef:
+                name: coolstore-db
+            - secretRef:
+                name: coolstore-oidc
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coolstore
+spec:
+  selector:
+    app: coolstore
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: coolstore
+spec:
+  to:
+    kind: Service
+    name: coolstore
+  port:
+    targetPort: 8080
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: coolstore
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: coolstore
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 75
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: coolstore
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: coolstore
+---
+# Kafka topics (TG7.3): `orders` consumed by BOTH groups coolstore-orders and
+# coolstore-inventory — the semantic replacement for the JMS topic broadcast.
+# DLQs back the SmallRye dead-letter-queue failure strategy (TG8.2).
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: orders
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 3
+  replicas: 3
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: orders-dlq
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 1
+  replicas: 3
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: inventory-dlq
+  labels:
+    strimzi.io/cluster: my-cluster
+spec:
+  partitions: 1
+  replicas: 3

@@ -1,0 +1,44 @@
+# Kafka topics (TG7.3) — MigIQ containerize stage.
+# Requires the AMQ Streams (Strimzi) operator; cluster name `my-cluster`
+# matches KAFKA_BOOTSTRAP_SERVERS in configmap.yaml.
+#
+# `orders` is consumed by BOTH groups (coolstore-orders in OrderServiceMDB,
+# coolstore-inventory in InventoryNotificationMDB) — the semantic replacement
+# for the JMS topic broadcast. DLQs back the SmallRye dead-letter-queue
+# failure strategy (TG8.2 poison-message demo).
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: orders
+  namespace: coolstore-dev
+  labels:
+    strimzi.io/cluster: my-cluster
+    app.kubernetes.io/part-of: coolstore
+spec:
+  partitions: 3
+  replicas: 3
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: orders-dlq
+  namespace: coolstore-dev
+  labels:
+    strimzi.io/cluster: my-cluster
+    app.kubernetes.io/part-of: coolstore
+spec:
+  partitions: 1
+  replicas: 3
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: inventory-dlq
+  namespace: coolstore-dev
+  labels:
+    strimzi.io/cluster: my-cluster
+    app.kubernetes.io/part-of: coolstore
+spec:
+  partitions: 1
+  replicas: 3
