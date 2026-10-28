@@ -2,6 +2,7 @@ package com.redhat.coolstore.rest;
 
 import java.util.List;
 
+import jakarta.annotation.security.PermitAll;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -18,6 +19,7 @@ import com.redhat.coolstore.service.ProductService;
 
 @ApplicationScoped
 @Path("/products")
+@PermitAll
 @Produces(MediaType.APPLICATION_JSON)
 public class ProductEndpoint {
 

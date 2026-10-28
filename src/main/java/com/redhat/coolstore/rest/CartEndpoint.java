@@ -5,7 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
@@ -20,8 +22,9 @@ import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
 import com.redhat.coolstore.service.ShoppingCartService;
 
-@SessionScoped
+@ApplicationScoped
 @Path("/cart")
+@PermitAll
 public class CartEndpoint {
 
 	@Inject
@@ -36,6 +39,7 @@ public class CartEndpoint {
 
 	@POST
 	@Path("/checkout/{cartId}")
+	@RolesAllowed("**")
 	@Produces(MediaType.APPLICATION_JSON)
 	public ShoppingCart checkout(@PathParam("cartId") String cartId) {
 		return shoppingCartService.checkOutShoppingCart(cartId);

@@ -42,10 +42,10 @@ public class ShoppingCartServiceTest {
     }
 
     @Test
-    public void testGetShoppingCartReturnsSameInstance() {
-        ShoppingCart cart1 = shoppingCartService.getShoppingCart("cart-1");
-        ShoppingCart cart2 = shoppingCartService.getShoppingCart("cart-2");
-        assertSame(cart1, cart2);
+    public void testGetShoppingCartReturnsSameInstancePerCartId() {
+        // Corrected after multi-cart fix (task 1.5): same cartId -> same cart, different cartId -> independent cart
+        assertSame(shoppingCartService.getShoppingCart("cart-1"), shoppingCartService.getShoppingCart("cart-1"));
+        assertNotSame(shoppingCartService.getShoppingCart("cart-1"), shoppingCartService.getShoppingCart("cart-2"));
     }
 
     @Test

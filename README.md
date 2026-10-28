@@ -180,3 +180,30 @@ If you perform a test checkout of an item, you should see both nodes processing 
 
 
 ```
+## Running the Quarkus application (modernized)
+
+Quarkus 3.8.1 on Java 21. Build: `mvn clean package`, run: `java -jar target/quarkus-app/quarkus-run.jar`.
+
+### Environment variables
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| QUARKUS_DATASOURCE_JDBC_URL | PostgreSQL JDBC URL (prod) | jdbc:postgresql://localhost:5432/coolstore |
+| QUARKUS_DATASOURCE_USERNAME / _PASSWORD | DB credentials (prod) | coolstore |
+| KAFKA_BOOTSTRAP_SERVERS | Kafka brokers | localhost:9092 |
+| OIDC_AUTH_SERVER_URL | Keycloak realm URL | http://localhost:8081/realms/eap |
+| OIDC_CLIENT_SECRET | 'coolstore' client secret (ROTATE — realm-export default is a placeholder) | coolstore-client-secret |
+| AUDIT_LOGGING_HOST / AUDIT_LOGGING_PORT | audit TCP endpoint | localhost / 9999 |
+| CORS_ORIGINS | allowed SPA origins | http://localhost:8080 |
+
+### Security model (realm 'eap')
+- Catalog (`GET /services/products`) is public; checkout and `/services/orders` require authentication (any realm user).
+- SPA uses public client `eap-app`; backend uses confidential client `coolstore` (secret via `OIDC_CLIENT_SECRET`).
+- Import `realm-export.json` into Keycloak, then rotate the `coolstore` client secret and set `OIDC_CLIENT_SECRET`.
+
+### Frontend
+SPA served from `src/main/resources/META-INF/resources` (index.jsp → index.html; bower_components pruned to runtime assets — docs/tests/build files and the tainted `matchHeight/gulpfile.js` removed). `keycloak.json` targets realm `eap`; update `auth-server-url` per environment.
+
+### Audit logging
+`OrderService` emits `AuditEvent` records via `StreamableAuditLogger` (TCP, `logEventAsync`) per rules/rule.yaml audit-logging-0001..0005.
+
+Legacy JBoss EAP 7.4 instructions follow above.

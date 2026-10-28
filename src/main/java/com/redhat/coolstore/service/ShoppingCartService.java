@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.inject.Inject;
-import jakarta.enterprise.context.SessionScoped;
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
 
 import com.redhat.coolstore.model.Product;
@@ -21,13 +21,12 @@ import com.redhat.coolstore.model.ShoppingCartItem;
  * - @Transactional restored on checkOutShoppingCart() and priceShoppingCart(): In @Stateful EJB,
  *   container-managed transactions ensured atomicity for state mutation. CDI @SessionScoped requires explicit
  *   @Transactional boundaries per [RULE] Amendment 1 lines 88–93 (EJB tx semantics preservation).
- * - Note: In Quarkus REST context, @SessionScoped requires explicit HttpSession management.
- *   [BUG(port)]: cartId parameter ignored in getShoppingCart(); no multi-cart support. Implement cartId-keyed
- *   Map<String, ShoppingCart> per [RULE] §2 line 118. Current: Single cart per session (tabbed browsing unsupported).
+ * - Fixed (task 1.5): cartId-keyed Map<String, ShoppingCart> multi-cart support per [RULE] §2 line 118;
+ *   scope widened to @ApplicationScoped for the session-free cartId-keyed REST design (task 3.4).
  * - ShoppingCartOrderProcessor dependency: MIGRATED to @ApplicationScoped (Pattern 1A applied 2026-08-20).
  *   CDI bean resolution now valid at deployment. Injection at line 45 verified.
  */
-@SessionScoped
+@ApplicationScoped
 public class ShoppingCartService implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -46,18 +45,16 @@ public class ShoppingCartService implements java.io.Serializable {
     @Inject
     transient ShippingService shippingService;
 
-    private ShoppingCart cart = new ShoppingCart(); // Each user can have multiple shopping carts (tabbed browsing)
+    // cartId-keyed carts (task 1.5 fix): multiple carts per user (tabbed browsing), session-free design
+    private final java.util.Map<String, ShoppingCart> carts = new java.util.concurrent.ConcurrentHashMap<>();
 
     public ShoppingCartService() {
     }
 
     public ShoppingCart getShoppingCart(String cartId) {
-        // [BUG(port)]: cartId parameter ignored; no multi-cart support per RULEBOOK §2 line 118.
-        // Single cart per session breaks tabbed-browsing use case (line 43 comment promises multi-cart).
-        // [TODO(port)]: Implement cartId-keyed Map<String, ShoppingCart> and update test expectations.
-        // NOTE: Fixing this requires updating ShoppingCartServiceTest.testGetShoppingCartReturnsSameInstance()
-        //       which currently validates broken behavior (assertSame across different cartIds).
-        return cart;
+        // Fixed (task 1.5 BUG(port) burn-down): cartId-keyed carts per RULEBOOK §2 line 118
+        String key = (cartId != null && !cartId.isEmpty()) ? cartId : "default";
+        return carts.computeIfAbsent(key, id -> new ShoppingCart());
     }
 
     /**
@@ -126,8 +123,7 @@ public class ShoppingCartService implements java.io.Serializable {
         sc.setShippingPromoSavings(0);
         sc.setCartTotal(0);
 
-        // [BUG(port)]: Null safety violation - initShoppingCartForPricing assumes getShoppingCartItemList() != null.
-        // Line 93 guards with null check; this loop does not. Applied null check per RULEBOOK §6 defensive programming.
+        // Null safety per RULEBOOK §6 defensive programming (BUG(port) burn-down, task 1.5): loop guarded below.
         if (sc.getShoppingCartItemList() != null && sc.getShoppingCartItemList().size() > 0) {
             for (ShoppingCartItem sci : sc.getShoppingCartItemList()) {
                 Product p = getProduct(sci.getProduct().getItemId());

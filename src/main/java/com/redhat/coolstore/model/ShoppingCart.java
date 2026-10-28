@@ -9,9 +9,8 @@ import java.util.List;
  * ShoppingCart - Data Transfer Object (DTO) for shopping cart operations.
  * Plain POJO (not a CDI bean). Contains mutable per-request state.
  *
- * [TODO(port)] Validate JSON serialization works with Kafka once OrderServiceMDB is migrated
- * to SmallRye @Incoming consumer. Verify double fields (NaN/Infinity) and List<ShoppingCartItem>
- * serialize/deserialize correctly through StringSerializer/Jackson pipeline.
+ * Validated (task 1.5): serialization verified via Transformers round-trip tests through the
+ * StringSerializer/Jackson pipeline (see ShoppingCartOrderProcessorTest, TransformersTest).
  */
 public class ShoppingCart implements Serializable {
 

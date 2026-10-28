@@ -17,10 +17,10 @@
 
 ### Acceptance Criteria
 - [ ] `mvn clean package` and `mvn test` succeed on the current toolchain; results recorded
-- [ ] All 21 test classes compile (javax→jakarta fixed in ShoppingCartOrderProcessorTest; mockito-junit-jupiter added)
-- [ ] All 10 TODO(port)/BUG(port) markers in main source triaged: fixed or logged with owner
-- [ ] Characterization tests cover cart totals, promotion/shipping calculation, order persistence, inventory decrement
-- [ ] 7 rgctl secret findings triaged; runtime secrets externalized
+- [x] All 21 test classes compile (javax→jakarta fixed in ShoppingCartOrderProcessorTest; mockito-junit-jupiter added)
+- [x] All 10 TODO(port)/BUG(port) markers in main source triaged: fixed or logged with owner
+- [x] Characterization tests cover cart totals, promotion/shipping calculation, order persistence, inventory decrement
+- [x] 7 rgctl secret findings triaged; runtime secrets externalized
 
 ### Details
 - **Priority:** High (blocks everything)
@@ -60,11 +60,11 @@
 - ## Task Group 2: Java 21 Toolchain & Audit Logging 2.x Integration (from tasks.md)
 
 ### Acceptance Criteria
-- [ ] Build targets Java 21 on Quarkus 3.8.1 with zero errors
-- [ ] audit-logging-library 2.0.0 dependency resolves (1.0.0 removed)
-- [ ] OrderService emits `AuditEvent` records via `StreamableAuditLogger` over TCP using `logEventAsync`
-- [ ] All five rules in `rules/rule.yaml` (audit-logging-0001…0005) verified compliant
-- [ ] Audit TCP endpoint externalized via MicroProfile Config
+- [x] Build targets Java 21 on Quarkus 3.8.1 with zero errors
+- [x] audit-logging-library 2.0.0 dependency resolves (1.0.0 removed)
+- [x] OrderService emits `AuditEvent` records via `StreamableAuditLogger` over TCP using `logEventAsync`
+- [x] All five rules in `rules/rule.yaml` (audit-logging-0001…0005) verified compliant
+- [x] Audit TCP endpoint externalized via MicroProfile Config
 
 ### Details
 - **Priority:** High
@@ -103,10 +103,10 @@
 - ## Task Group 3: Security — Keycloak OIDC Hardening (from tasks.md)
 
 ### Acceptance Criteria
-- [ ] OIDC configured against realm `eap` (client `coolstore`); secret injected via env var
-- [ ] Protected endpoints reject anonymous calls (401); catalog endpoints permit anonymous access
-- [ ] CORS allows the SPA origin; frontend login/logout works end-to-end
-- [ ] `realm-export.json` imports into target Keycloak version
+- [x] OIDC configured against realm `eap` (client `coolstore`); secret injected via env var
+- [x] Protected endpoints reject anonymous calls (401); catalog endpoints permit anonymous access
+- [x] CORS allows the SPA origin; frontend login/logout works end-to-end
+- [x] `realm-export.json` imports into target Keycloak version
 
 ### Details
 - **Priority:** High
@@ -146,10 +146,10 @@
 - ## Task Group 4: Production Data & Messaging Configuration (from tasks.md)
 
 ### Acceptance Criteria
-- [ ] `%prod` profile targets PostgreSQL via env vars; H2 remains test-only
-- [ ] Flyway migrations run cleanly on PostgreSQL; Hibernate set to validate only
-- [ ] Kafka bootstrap externalized; distinct consumer groups preserved; DLQ strategy verified
-- [ ] All `@Incoming` methods `@Transactional`; duplicate-order idempotency guard present
+- [x] `%prod` profile targets PostgreSQL via env vars; H2 remains test-only
+- [x] Flyway migrations run cleanly on PostgreSQL; Hibernate set to validate only
+- [x] Kafka bootstrap externalized; distinct consumer groups preserved; DLQ strategy verified
+- [x] All `@Incoming` methods `@Transactional`; duplicate-order idempotency guard present
 
 ### Details
 - **Priority:** High
@@ -188,10 +188,10 @@
 - ## Task Group 5: Frontend Serving & Legacy Cleanup (from tasks.md)
 
 ### Acceptance Criteria
-- [ ] SPA (index, app/, partials/, runtime bower assets) served from `META-INF/resources`
-- [ ] Non-runtime bower content pruned (docs/tests/sandbox/Gruntfiles); tainted `gulpfile.js` gone
-- [ ] `weblogic.application` shim and stale persistence.xml removed; build stays green
-- [ ] Frontend Keycloak adapter points at the OIDC realm; SPA login works
+- [x] SPA (index, app/, partials/, runtime bower assets) served from `META-INF/resources`
+- [x] Non-runtime bower content pruned (docs/tests/sandbox/Gruntfiles); tainted `gulpfile.js` gone
+- [x] `weblogic.application` shim and stale persistence.xml removed; build stays green
+- [x] Frontend Keycloak adapter points at the OIDC realm; SPA login works
 
 ### Details
 - **Priority:** Medium

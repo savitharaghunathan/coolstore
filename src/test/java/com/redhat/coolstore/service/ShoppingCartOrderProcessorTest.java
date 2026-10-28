@@ -3,92 +3,60 @@ package com.redhat.coolstore.service;
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.model.ShoppingCart;
 import com.redhat.coolstore.model.ShoppingCartItem;
-import org.junit.Before;
-import org.junit.Test;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import javax.jms.JMSContext;
-import javax.jms.JMSProducer;
-import javax.jms.Topic;
-import java.util.logging.Logger;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
-
+/**
+ * Task 1.3: legacy javax.jms JMSContext/JMSProducer/Topic doubles replaced with a
+ * SmallRye Reactive Messaging Emitter mock; JUnit 4 -> JUnit 5 (mockito-junit-jupiter).
+ */
+@ExtendWith(MockitoExtension.class)
 public class ShoppingCartOrderProcessorTest {
 
     @Mock
-    private JMSContext context;
-
-    @Mock
-    private Topic ordersTopic;
-
-    @Mock
-    private JMSProducer producer;
-
-    @Mock
-    private Logger log;
+    private Emitter<String> orders;
 
     @InjectMocks
     private ShoppingCartOrderProcessor processor;
 
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-        when(context.createProducer()).thenReturn(producer);
-    }
-
     @Test
-    public void testProcessSendsMessageToTopic() {
-        ShoppingCart cart = new ShoppingCart();
-        cart.setCartTotal(50.0);
-
-        Product p = new Product();
-        p.setItemId("329299");
-        p.setPrice(34.99);
-
-        ShoppingCartItem sci = new ShoppingCartItem();
-        sci.setProduct(p);
-        sci.setQuantity(1);
-        sci.setPrice(34.99);
-        cart.addShoppingCartItem(sci);
-
-        processor.process(cart);
-
-        verify(context).createProducer();
-        verify(producer).send(eq(ordersTopic), anyString());
+    public void testProcessSendsMessageToOrdersChannel() {
+        processor.process(buildCart());
+        verify(orders).send(anyString());
     }
 
     @Test
     public void testProcessSendsValidJson() {
-        ShoppingCart cart = new ShoppingCart();
-        cart.setCartTotal(34.99);
-        cart.setCartItemPromoSavings(0.0);
-        cart.setShippingTotal(2.99);
-        cart.setShippingPromoSavings(0.0);
-
-        Product p = new Product();
-        p.setItemId("329299");
-        p.setPrice(34.99);
-
-        ShoppingCartItem sci = new ShoppingCartItem();
-        sci.setProduct(p);
-        sci.setQuantity(1);
-        sci.setPrice(34.99);
-        cart.addShoppingCartItem(sci);
-
-        processor.process(cart);
-
+        processor.process(buildCart());
         ArgumentCaptor<String> jsonCaptor = ArgumentCaptor.forClass(String.class);
-        verify(producer).send(eq(ordersTopic), jsonCaptor.capture());
-
+        verify(orders).send(jsonCaptor.capture());
         String json = jsonCaptor.getValue();
         assertTrue(json.contains("\"orderValue\""));
         assertTrue(json.contains("\"customerName\""));
         assertTrue(json.contains("\"items\""));
         assertTrue(json.contains("\"productSku\":\"329299\""));
+    }
+
+    private ShoppingCart buildCart() {
+        ShoppingCart cart = new ShoppingCart();
+        cart.setCartTotal(34.99);
+        Product p = new Product();
+        p.setItemId("329299");
+        p.setPrice(34.99);
+        ShoppingCartItem sci = new ShoppingCartItem();
+        sci.setProduct(p);
+        sci.setQuantity(1);
+        sci.setPrice(34.99);
+        cart.addShoppingCartItem(sci);
+        return cart;
     }
 }

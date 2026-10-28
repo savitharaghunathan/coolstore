@@ -18,11 +18,21 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd'T'HHmmss</maven.build.timestamp.format>
         <project.encoding>UTF-8</project.encoding>
-        <maven.compiler.release>11</maven.compiler.release>
-        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+        <!-- Java 21 (audit-logging-library 2.x requirement, rules/rule.yaml audit-logging-0001) -->
+        <maven.compiler.release>21</maven.compiler.release>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.version>3.8.1</quarkus.platform.version>
+        <audit-logging-library.version>2.0.0</audit-logging-library.version>
     </properties>
+    <!-- Project-local repository for the custom audit-logging-library 2.x jar
+         (rule audit-logging-0001: upgrade from 1.0.0; internal registry can replace this) -->
+    <repositories>
+        <repository>
+            <id>project-local</id>
+            <url>file://${project.basedir}/lib</url>
+        </repository>
+    </repositories>
     <dependencies>
         <!-- Jakarta EE Core (CDI, REST, Persistence, Transactions) -->
         <dependency>
@@ -46,7 +56,7 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jaxb</artifactId>
         </dependency>
-        <!-- SmallRye Reactive Messaging with Kafka Connector (Amendment 2) -->
+        <!-- SmallRye Reactive Messaging with Kafka Connector -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-reactive-messaging-kafka</artifactId>
@@ -55,12 +65,12 @@
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
         </dependency>
-        <!-- Transaction Support for @Transactional on @Incoming methods (Amendment 1) -->
+        <!-- Transaction Support for @Transactional on @Incoming methods -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-narayana-jta</artifactId>
         </dependency>
-        <!-- Database Migration: Flyway (compatible version for Quarkus) -->
+        <!-- Database Migration: Flyway (extension runs migrations at startup; DataBaseMigrationStartup removed) -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-flyway</artifactId>
@@ -70,17 +80,33 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-logging-json</artifactId>
         </dependency>
-        <!-- Keycloak/OIDC Integration [TODO(port): Keycloak realm/client setup required] -->
+        <!-- Keycloak/OIDC (realm 'eap'; configured in application.properties with env-var secret) -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc</artifactId>
         </dependency>
-        <!-- [TODO(port): Audit Logging Library - custom dependency needs repository setup or mvn install:install-file to local Maven repo] -->
-        <!-- <dependency>
+        <!-- Audit Logging Library 2.x (rules audit-logging-0001..0005): AuditEvent records +
+             StreamableAuditLogger over TCP with logEventAsync -->
+        <dependency>
             <groupId>com.enterprise</groupId>
             <artifactId>audit-logging-library</artifactId>
-            <version>1.0.0</version>
-        </dependency> -->
+            <version>${audit-logging-library.version}</version>
+            <!-- Quarkus platform provides Jackson + SLF4J; avoid version drift -->
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-databind</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.datatype</groupId>
+                    <artifactId>jackson-datatype-jsr310</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -97,10 +123,21 @@
             <artifactId>quarkus-test-h2</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- [TODO(port): Ensure application.properties has %test.quarkus.datasource.db-kind=h2 to activate H2 for tests] -->
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- JUnit 5 Mockito extension (task 1.4: legacy javax.jms test rewrite) -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Test security identities for OIDC-annotated endpoints -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-test-security</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- Kafka Testing: in-memory connector for @Incoming/@Outgoing methods -->
@@ -129,7 +166,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!-- Java Compiler: Java 11 target for Quarkus 3.x -->
+            <!-- Java Compiler: Java 21 target (audit-logging-library 2.x) on Quarkus 3.8.1 -->
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
@@ -138,7 +175,7 @@
                     <release>${maven.compiler.release}</release>
                 </configuration>
             </plugin>
-            <!-- Surefire for testing -->
+            <!-- Surefire 3.x with native JUnit 5 platform support -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -151,7 +188,4 @@
             </plugin>
         </plugins>
     </build>
-    <profiles>
-        <!-- [TODO(port): OpenShift profile with native image build configuration] -->
-    </profiles>
 </project>

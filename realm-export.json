@@ -499,6 +499,24 @@
         "offline_access",
         "microprofile-jwt"
       ]
+    },
+    {
+      "clientId": "coolstore",
+      "name": "coolstore",
+      "description": "Quarkus backend service client (confidential); rotate secret and set OIDC_CLIENT_SECRET per environment",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "coolstore-client-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:8080/*"
+      ],
+      "webOrigins": [
+        "http://localhost:8080"
+      ]
     }
   ],
   "clientScopes": [
