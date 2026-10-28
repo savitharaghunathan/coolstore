@@ -11,7 +11,9 @@ import jakarta.enterprise.context.ApplicationScoped;
  * Shipping calculation service.
  *
  * Migrated from Java EE 7 (@Stateless, @Remote) to Quarkus (@ApplicationScoped).
- * - Removed @Remote interface (ShippingServiceRemote) - service is now local-only per Quarkus CDI patterns
+ * - @Remote interface (ShippingServiceRemote) DELETED by MigIQ execute stage (TG 3.4):
+ *   rgctl blast-radius confirmed zero callers/impact (score 0.0) and the inventory
+ *   decision was SAFE-DELETE. Service is local-only per Quarkus CDI patterns.
  * - Pure business logic with no persistence, messaging, or security concerns
  * - Calculations are thread-safe when ShoppingCart instances are not shared across concurrent threads
  *   (Assumes stable ShoppingCart state during calculation)

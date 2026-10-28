@@ -173,7 +173,7 @@ public class Transformers {
                 order.setItemList(items);
                 log.debug("Successfully deserialized JSON order message from Kafka consumer");
                 return order;
-            } catch (NullPointerException | JsonException e) {
+            } catch (NullPointerException | JsonException | ClassCastException e) {
                 log.error("Malformed order JSON, unable to deserialize: {}", json, e);
                 throw new JsonException("Failed to deserialize order JSON: required field missing or type mismatch", e);
             }

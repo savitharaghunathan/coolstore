@@ -2,6 +2,7 @@ package com.redhat.coolstore.rest;
 
 import com.redhat.coolstore.model.Product;
 import com.redhat.coolstore.service.ProductService;
+import jakarta.ws.rs.core.Response;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -63,7 +64,12 @@ public class ProductEndpointTest {
         Product p = createProduct("329299", "Red Fedora", 34.99);
         when(pm.getProductByItemId("329299")).thenReturn(p);
 
-        Product result = endpoint.getProduct("329299");
+        // ProductEndpoint.getProduct returns jakarta.ws.rs.core.Response (200 + entity,
+        // or 404) — unwrap the entity as the front-end AJAX layer does.
+        Response response = endpoint.getProduct("329299");
+        assertNotNull(response);
+        assertEquals(200, response.getStatus());
+        Product result = (Product) response.getEntity();
         assertNotNull(result);
         assertEquals("329299", result.getItemId());
         assertEquals(34.99, result.getPrice(), 0.001);

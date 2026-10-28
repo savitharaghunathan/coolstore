@@ -43,9 +43,13 @@ public class ShoppingCartServiceTest {
 
     @Test
     public void testGetShoppingCartReturnsSameInstance() {
-        ShoppingCart cart1 = shoppingCartService.getShoppingCart("cart-1");
+        // TG 3.5 refactor: carts are keyed by cartId (RULEBOOK §2 line 118 fix).
+        // Same cartId returns the same instance; different cartIds get separate carts.
+        ShoppingCart cart1a = shoppingCartService.getShoppingCart("cart-1");
+        ShoppingCart cart1b = shoppingCartService.getShoppingCart("cart-1");
         ShoppingCart cart2 = shoppingCartService.getShoppingCart("cart-2");
-        assertSame(cart1, cart2);
+        assertSame(cart1a, cart1b);
+        assertNotSame(cart1a, cart2);
     }
 
     @Test

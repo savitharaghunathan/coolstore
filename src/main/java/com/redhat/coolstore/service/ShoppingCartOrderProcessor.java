@@ -25,8 +25,11 @@ public class ShoppingCartOrderProcessor {
 
     private static final Logger log = LoggerFactory.getLogger(ShoppingCartOrderProcessor.class);
 
+    // Channel renamed orders → orders-out (TG 3.2/6.1): the in-memory test connector
+    // forbids one name serving both directions; Kafka topic stays `orders` (topic
+    // configured in application.properties) so production behavior is unchanged.
     @Inject
-    @Channel("orders")
+    @Channel("orders-out")
     Emitter<String> orders;
 
     public void process(ShoppingCart cart) {

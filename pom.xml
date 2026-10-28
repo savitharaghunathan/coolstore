@@ -18,7 +18,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.build.timestamp.format>yyyyMMdd'T'HHmmss</maven.build.timestamp.format>
         <project.encoding>UTF-8</project.encoding>
-        <maven.compiler.release>11</maven.compiler.release>
+        <!-- Bumped 11 -> 17 by MigIQ execute stage (TG 1.1): Quarkus 3.7+ dropped Java 11
+             support; quarkus-maven-plugin 3.8.1 mojos fail to load on JDK 11 (PluginContainerException).
+             Pre-authorized by migration-prompt.md constraint: "bump to 17 only if required". -->
+        <maven.compiler.release>17</maven.compiler.release>
         <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
         <quarkus.platform.version>3.8.1</quarkus.platform.version>
@@ -75,12 +78,14 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc</artifactId>
         </dependency>
-        <!-- [TODO(port): Audit Logging Library - custom dependency needs repository setup or mvn install:install-file to local Maven repo] -->
-        <!-- <dependency>
+        <!-- Audit Logging Library (TG 5.2): custom com.enterprise jar bootstrapped into the
+             local repository via mvn install:install-file (see mig-execute-workspace
+             execution-log). Version 2.0.0 chosen per migration inventory recommendation. -->
+        <dependency>
             <groupId>com.enterprise</groupId>
             <artifactId>audit-logging-library</artifactId>
-            <version>1.0.0</version>
-        </dependency> -->
+            <version>2.0.0</version>
+        </dependency>
         <!-- Test Dependencies -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -92,10 +97,13 @@
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- TG 6.1 fix: quarkus-test-h2 does not register an Agroal JDBC driver, so
+             @QuarkusTest bootstrap failed ("Unable to find a JDBC driver ... 'h2'").
+             quarkus-jdbc-h2 registers the driver for the base (H2) profile; %prod
+             overrides to PostgreSQL at runtime (profile matrix, TG 5.5). -->
         <dependency>
             <groupId>io.quarkus</groupId>
-            <artifactId>quarkus-test-h2</artifactId>
-            <scope>test</scope>
+            <artifactId>quarkus-jdbc-h2</artifactId>
         </dependency>
         <!-- [TODO(port): Ensure application.properties has %test.quarkus.datasource.db-kind=h2 to activate H2 for tests] -->
         <dependency>
@@ -103,10 +111,25 @@
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- TG 6.1: mockito-junit-jupiter was missing (CartEndpointTest imports
+             org.mockito.junit.jupiter.MockitoExtension) — test-compile failure in baseline -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!-- Kafka Testing: in-memory connector for @Incoming/@Outgoing methods -->
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-test-kafka-companion</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- TG 6.1 fix: %test profile configures smallrye-in-memory connectors, but the
+             kafka extension only registers the Kafka connector — the in-memory connector
+             artifact is needed for @QuarkusTest bootstrap. -->
+        <dependency>
+            <groupId>io.smallrye.reactive</groupId>
+            <artifactId>smallrye-reactive-messaging-in-memory</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -137,6 +160,49 @@
                     <encoding>${project.encoding}</encoding>
                     <release>${maven.compiler.release}</release>
                 </configuration>
+            </plugin>
+            <!-- Static front end (TG 4.2): copy AngularJS assets from src/main/webapp
+                 into META-INF/resources so Quarkus serves them from the jar at / -->
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-webapp-static-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.outputDirectory}/META-INF/resources</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>src/main/webapp</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Coverage gate (TG 6.5): JaCoCo line coverage on com.redhat.coolstore.* -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <!-- Surefire for testing -->
             <plugin>

@@ -1,6 +1,7 @@
 package com.redhat.coolstore.service;
 
 import com.redhat.coolstore.model.Order;
+import com.redhat.coolstore.model.OrderItem;
 import com.redhat.coolstore.utils.Transformers;
 import io.quarkus.logging.Log;
 import io.quarkus.runtime.Startup;
@@ -9,22 +10,30 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
-import org.eclipse.microprofile.reactive.messaging.Message;
-import java.util.Optional;
 
 /**
  * Quarkus reactive messaging consumer for inventory notifications.
  *
- * Changes from EJB MDB to Quarkus Reactive Messaging:
- * - Replaced @MessageDriven with @ApplicationScoped for reactive context.
- * - Removed JMS MessageListener interface; uses SmallRye Reactive Messaging @Incoming.
- * - Uses @Transactional to wrap message processing for database consistency.
- * - Uses Quarkus ConfigProperty for external configuration (threshold, logging).
- * - Integrated Quarkus logging (Log) instead of System.out/err.
+ * MIGRATION NOTES (RULEBOOK "Messaging Connector Decision" + Amendments 1–2):
+ * - Replaced JMS @MessageDriven MessageListener with SmallRye @Incoming.
+ * - Channel renamed inventory-updates → "inventory" to match the configured
+ *   mp.messaging.incoming.inventory.* channel (Kafka topic `orders`, consumer
+ *   group `coolstore-inventory`). The previous channel name caused application
+ *   startup failure (channel without connector configuration).
+ * - @Transactional per RULEBOOK Amendment 1: SmallRye @Incoming methods do NOT
+ *   auto-run in transactions; JPA writes require an explicit jakarta.transaction
+ *   boundary (TransactionRequiredException risk otherwise).
+ * - Inventory is updated via CatalogService.updateInventoryItems (the same
+ *   mechanism as OrderServiceMDB), replacing the prior reflection-based
+ *   setQuantity(orderItem, ...) which wrote the new quantity onto the ORDER
+ *   ITEM (a no-op for the database) instead of the catalog inventory.
+ * - Deserialization/processing failures propagate so the dead-letter-queue
+ *   failure-strategy (inventory-dlq) can quarantine poison messages; the prior
+ *   catch-all swallowed errors, silently disabling the DLQ.
  *
- * Configuration required in application.properties:
- *   quarkus.kafka.bootstrap.servers=localhost:9092
- *   mp.messaging.incoming.inventory-updates.connector=smallrye-kafka
+ * Configuration (application.properties):
+ *   mp.messaging.connector.smallrye-kafka.bootstrap.servers=...
+ *   mp.messaging.incoming.inventory.connector=smallrye-kafka
  *   inventory.notification.threshold=50
  */
 @ApplicationScoped
@@ -38,30 +47,21 @@ public class InventoryNotificationMDB {
   private int lowThreshold;
 
   /**
-   * Processes incoming messages from the inventory-updates Kafka topic.
-   * Deserializes Order from message payload and updates inventory quantities.
+   * Processes incoming order messages from the `inventory` channel (Kafka topic
+   * `orders`, consumer group `coolstore-inventory`). Deserializes the Order and
+   * decrements catalog inventory for each ordered item, warning when stock
+   * falls below the configured low-inventory threshold.
    *
-   * @param orderStr the order JSON string from Kafka message
+   * @param orderStr the order JSON string from the Kafka message
    */
-  @Incoming("inventory-updates")
+  @Incoming("inventory")
   @Transactional
   public void processUpdate(String orderStr) {
-    try {
-      Log.info("Received inventory notification message");
+    Log.info("Received inventory notification message");
 
-      Order order = Transformers.jsonToOrder(orderStr);
+    Order order = Transformers.jsonToOrder(orderStr);
 
-      order.getItemList().forEach(orderItem -> {
-        try {
-          processOrderItem(orderItem);
-        } catch (Exception e) {
-          Log.errorf("Error processing order item: %s", e.getMessage());
-        }
-      });
-
-    } catch (Exception e) {
-      Log.errorf("Unexpected error processing inventory notification: %s", e.getMessage());
-    }
+    order.getItemList().forEach(this::processOrderItem);
   }
 
   /**
@@ -69,63 +69,34 @@ public class InventoryNotificationMDB {
    *
    * @param orderItem the order item to process
    */
-  private void processOrderItem(Object orderItem) {
-    // Assuming orderItem has getProductId() and getQuantity() methods
-    String productId = getProductId(orderItem);
-    int requestedQuantity = getQuantity(orderItem);
+  private void processOrderItem(OrderItem orderItem) {
+    String productId = orderItem.getProductId();
+    int requestedQuantity = orderItem.getQuantity();
 
-    Optional.ofNullable(catalogService.getCatalogItemById(productId))
-        .ifPresentOrElse(
-            catalogItem -> {
-              int oldQuantity = catalogItem.getInventory().getQuantity();
-              int newQuantity = oldQuantity - requestedQuantity;
-
-              if (newQuantity < lowThreshold) {
-                Log.warnf(
-                    "Inventory for item %s is below threshold (%d). Current: %d, threshold: %d",
-                    productId, lowThreshold, newQuantity, lowThreshold);
-                // Optionally trigger alert/notification here
-              } else {
-                setQuantity(orderItem, newQuantity);
-                Log.debugf(
-                    "Updated inventory for item %s: %d -> %d", productId, oldQuantity, newQuantity);
-              }
-            },
-            () -> Log.warnf("Catalog item not found: %s", productId));
-  }
-
-  /**
-   * Extracts product ID from order item (reflection-based or interface-based).
-   */
-  private String getProductId(Object orderItem) {
     try {
-      return (String) orderItem.getClass().getMethod("getProductId").invoke(orderItem);
-    } catch (Exception e) {
-      Log.warnf("Failed to extract productId: %s", e.getMessage());
-      return null;
+      catalogService.updateInventoryItems(productId, requestedQuantity);
+    } catch (IllegalStateException e) {
+      // Unknown catalog item / missing inventory: warn but keep processing the
+      // remaining items (parity with Java EE MDB behavior of non-fatal per-item misses).
+      Log.warnf("Inventory update skipped for item %s: %s", productId, e.getMessage());
+      return;
+    }
+
+    Log.debugf("Updated inventory for item %s (-%d)", productId, requestedQuantity);
+
+    int newQuantity = currentQuantity(productId);
+    if (newQuantity >= 0 && newQuantity < lowThreshold) {
+      Log.warnf(
+          "Inventory for item %s is below threshold. Current: %d, threshold: %d",
+          productId, newQuantity, lowThreshold);
     }
   }
 
-  /**
-   * Extracts quantity from order item.
-   */
-  private int getQuantity(Object orderItem) {
+  private int currentQuantity(String productId) {
     try {
-      return (int) orderItem.getClass().getMethod("getQuantity").invoke(orderItem);
+      return catalogService.getCatalogItemById(productId).getInventory().getQuantity();
     } catch (Exception e) {
-      Log.warnf("Failed to extract quantity: %s", e.getMessage());
-      return 0;
-    }
-  }
-
-  /**
-   * Sets quantity on order item.
-   */
-  private void setQuantity(Object orderItem, int quantity) {
-    try {
-      orderItem.getClass().getMethod("setQuantity", int.class).invoke(orderItem, quantity);
-    } catch (Exception e) {
-      Log.warnf("Failed to set quantity: %s", e.getMessage());
+      return -1;
     }
   }
 }

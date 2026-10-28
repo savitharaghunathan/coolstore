@@ -9,6 +9,7 @@ import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 /**
  * Created by tqvarnst on 2017-04-04.
@@ -22,9 +23,19 @@ public class DataBaseMigrationStartup {
     @Inject
     Flyway flyway;
 
+    // Schema authority switch (TG 2.3/6.1): Flyway owns the schema in dev/prod;
+    // under %test Hibernate drop-and-create owns it (running both double-creates).
+    @Inject
+    @ConfigProperty(name = "flyway.migrate.enabled", defaultValue = "true")
+    boolean migrateEnabled;
+
     void startup(@Observes StartupEvent ev) throws FlywayException {
         if (log != null) {
             log.info("Initializing/migrating the database using FlyWay");
+        }
+        if (!migrateEnabled) {
+            log.info("Flyway migration skipped (flyway.migrate.enabled=false)");
+            return;
         }
         flyway.baseline();
         // Start the db.migration

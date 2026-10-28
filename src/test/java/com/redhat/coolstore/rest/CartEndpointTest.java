@@ -28,7 +28,7 @@ public class CartEndpointTest {
     @BeforeEach
     public void setUp() {
         cart = new ShoppingCart();
-        when(shoppingCartService.getShoppingCart(anyString())).thenReturn(cart);
+        lenient().when(shoppingCartService.getShoppingCart(anyString())).thenReturn(cart);
     }
 
     @Test

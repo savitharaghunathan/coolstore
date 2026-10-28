@@ -11,54 +11,54 @@
 
 ## Task Group 1: Baseline Verification & Java EE Remnant Cleanup
 
-- [ ] 1.1 Establish green baseline: run `mvn clean verify` and record build/test results as the pre-hardening baseline
-- [ ] 1.2 Delete WebLogic compatibility shim `src/main/java/weblogic/application/ApplicationLifecycleEvent.java` and `ApplicationLifecycleListener.java`; migrate any needed lifecycle logic to `@Observes StartupEvent` in `com.redhat.coolstore.utils.StartupListener` (RULEBOOK §7)
-- [ ] 1.3 Remove legacy descriptor `src/main/webapp/WEB-INF/web.xml` (content is `<distributable/>` only — clustering handled by OpenShift)
-- [ ] 1.4 Remove `src/test/resources/META-INF/persistence.xml` (javax.persistence/H2 test PU) — Quarkus tests use `application.properties` `%test.` profile instead; add `%test.quarkus.datasource.db-kind=h2` if missing (pom TODO(port))
-- [ ] 1.5 Sweep for residual Java EE strings: `grep -rn "javax\.\|weblogic\|jboss" src/ --include=*.java --include=*.xml` must return only comments; clean or annotate each hit
+- [x] 1.1 Establish green baseline: run `mvn clean verify` and record build/test results as the pre-hardening baseline
+- [x] 1.2 Delete WebLogic compatibility shim `src/main/java/weblogic/application/ApplicationLifecycleEvent.java` and `ApplicationLifecycleListener.java`; migrate any needed lifecycle logic to `@Observes StartupEvent` in `com.redhat.coolstore.utils.StartupListener` (RULEBOOK §7)
+- [x] 1.3 Remove legacy descriptor `src/main/webapp/WEB-INF/web.xml` (content is `<distributable/>` only — clustering handled by OpenShift)
+- [x] 1.4 Remove `src/test/resources/META-INF/persistence.xml` (javax.persistence/H2 test PU) — Quarkus tests use `application.properties` `%test.` profile instead; add `%test.quarkus.datasource.db-kind=h2` if missing (pom TODO(port))
+- [x] 1.5 Sweep for residual Java EE strings: `grep -rn "javax\.\|weblogic\|jboss" src/ --include=*.java --include=*.xml` must return only comments; clean or annotate each hit
 - [ ] 1.6 Verify `InventoryEntity.java` `@XmlRootElement` works with `quarkus-jaxb` dependency (inventory says JAXB support required)
 - [ ] 1.7 **Test Generation**: Use mig-test-gen for regression coverage of cleanup
   - Command: `/skill mig-test-gen` targeting utils/startup lifecycle and model entities
   - Expected: unit tests confirming app boots, Flyway runs (`V1_1__CreateSchema.sql`, `V1_2__AddInitialData.sql`), entities load
 - [ ] 1.8 **Containerization**: Not yet applicable — single monolith container built in Task Group 7; record cleanup decisions in image build notes
 - [ ] 1.9 **Deployment**: Not yet applicable — no cluster artifacts in this group
-- [ ] 1.10 **Documentation**: Document removed Java EE artifacts
+- [x] 1.10 **Documentation**: Document removed Java EE artifacts
   - Update `migration/inventory.tsv` statuses (weblogic rows → DELETED)
   - Append deviations to `migration/RULEBOOK.md` Deviation Log
 
 ## Task Group 2: Model & Utils Layer Hardening (com.redhat.coolstore.model, .utils)
 
-- [ ] 2.1 Audit all 8 model classes (`CatalogItemEntity`, `InventoryEntity`, `Order`, `OrderItem`, `Product`, `Promotion`, `ShoppingCart`, `ShoppingCartItem`) for jakarta.persistence/jakarta.xml.bind correctness and JPA mapping parity with `V1_1__CreateSchema.sql`
-- [ ] 2.2 Verify `Transformers.java` JSON serialization parity: `shoppingCartToJson` / `jsonToOrder` output must match the Java EE baseline byte-for-byte (front end and Kafka consumers depend on the payload shapes)
-- [ ] 2.3 Verify `Producers.java` CDI producer methods and `DataBaseMigrationStartup.java` Flyway trigger under Quarkus; confirm no duplicate schema creation with `quarkus.hibernate-orm.database.generation` settings
-- [ ] 2.4 Confirm `StartupListener.java` uses Quarkus lifecycle events (`@Observes StartupEvent`) rather than servlet listeners
+- [x] 2.1 Audit all 8 model classes (`CatalogItemEntity`, `InventoryEntity`, `Order`, `OrderItem`, `Product`, `Promotion`, `ShoppingCart`, `ShoppingCartItem`) for jakarta.persistence/jakarta.xml.bind correctness and JPA mapping parity with `V1_1__CreateSchema.sql`
+- [x] 2.2 Verify `Transformers.java` JSON serialization parity: `shoppingCartToJson` / `jsonToOrder` output must match the Java EE baseline byte-for-byte (front end and Kafka consumers depend on the payload shapes)
+- [x] 2.3 Verify `Producers.java` CDI producer methods and `DataBaseMigrationStartup.java` Flyway trigger under Quarkus; confirm no duplicate schema creation with `quarkus.hibernate-orm.database.generation` settings
+- [x] 2.4 Confirm `StartupListener.java` uses Quarkus lifecycle events (`@Observes StartupEvent`) rather than servlet listeners
 - [ ] 2.5 **Test Generation**: Use mig-test-gen for model/utils coverage
   - Command: `/skill mig-test-gen` targeting `com.redhat.coolstore.model` and `com.redhat.coolstore.utils`
   - Expected: unit tests for all 8 models (21 existing test classes as base), Transformers round-trip tests, producer bean tests
 - [ ] 2.6 **Containerization**: Not yet applicable (library layer of the monolith)
 - [ ] 2.7 **Deployment**: Not yet applicable
-- [ ] 2.8 **Documentation**: Document model mapping table (entity ↔ table ↔ REST JSON shape) in `mig-plan-workspace/` notes for downstream stages
+- [x] 2.8 **Documentation**: Document model mapping table (entity ↔ table ↔ REST JSON shape) in `mig-plan-workspace/` notes for downstream stages
 
 ## Task Group 3: Service Layer Completion — Messaging & Transactions (com.redhat.coolstore.service)
 
-- [ ] 3.1 Audit every `@Incoming` consumer (`OrderServiceMDB`, `InventoryNotificationMDB`) for `@Transactional` (jakarta.transaction) on methods performing JPA writes — RULEBOOK Amendment 1: SmallRye `@Incoming` does NOT auto-run in transactions (runtime `TransactionRequiredException` risk, invisible to compiler)
-- [ ] 3.2 Verify `ShoppingCartOrderProcessor` uses `@Channel("orders") Emitter<String>` with Kafka producer guarantees already drafted in `application.properties` (`acks=all`, `enable.idempotence=true`, `retries=3`)
-- [ ] 3.3 Verify consumer group + DLQ config: `mp.messaging.incoming.orders.group.id=coolstore-orders`, `auto.offset.reset=earliest`, `failure-strategy=dead-letter-queue`, `orders-dlq` topic; confirm `inventory-updates` channel wiring for `InventoryNotificationMDB`
-- [ ] 3.4 Resolve `ShippingServiceRemote` decision (inventory: SAFE-DELETE) — delete interface and `implements ShippingServiceRemote` from `ShippingService.java` if no consumer exists (verify with rgctl blast-radius first)
-- [ ] 3.5 Verify `ShoppingCartService` `@SessionScoped` passivation safety (transient injected fields) and `@Transactional` on `checkOutShoppingCart()` / `priceShoppingCart()`
-- [ ] 3.6 Verify remaining services (`CatalogService`, `OrderService`, `ProductService`, `PromoService`, `ShippingService`) are `@ApplicationScoped` with behavior parity (promotion rules, shipping fee tiers, inventory updates)
+- [x] 3.1 Audit every `@Incoming` consumer (`OrderServiceMDB`, `InventoryNotificationMDB`) for `@Transactional` (jakarta.transaction) on methods performing JPA writes — RULEBOOK Amendment 1: SmallRye `@Incoming` does NOT auto-run in transactions (runtime `TransactionRequiredException` risk, invisible to compiler)
+- [x] 3.2 Verify `ShoppingCartOrderProcessor` uses `@Channel("orders") Emitter<String>` with Kafka producer guarantees already drafted in `application.properties` (`acks=all`, `enable.idempotence=true`, `retries=3`)
+- [x] 3.3 Verify consumer group + DLQ config: `mp.messaging.incoming.orders.group.id=coolstore-orders`, `auto.offset.reset=earliest`, `failure-strategy=dead-letter-queue`, `orders-dlq` topic; confirm `inventory-updates` channel wiring for `InventoryNotificationMDB`
+- [x] 3.4 Resolve `ShippingServiceRemote` decision (inventory: SAFE-DELETE) — delete interface and `implements ShippingServiceRemote` from `ShippingService.java` if no consumer exists (verify with rgctl blast-radius first)
+- [x] 3.5 Verify `ShoppingCartService` `@SessionScoped` passivation safety (transient injected fields) and `@Transactional` on `checkOutShoppingCart()` / `priceShoppingCart()`
+- [x] 3.6 Verify remaining services (`CatalogService`, `OrderService`, `ProductService`, `PromoService`, `ShippingService`) are `@ApplicationScoped` with behavior parity (promotion rules, shipping fee tiers, inventory updates)
 - [ ] 3.7 **Test Generation**: Use mig-test-gen for messaging and service parity
   - Command: `/skill mig-test-gen` targeting service layer + Kafka channels
   - Expected: characterization tests for pricing/promotion/shipping math, Kafka round-trip test (producer → `orders` → consumer persists order + updates inventory), DLQ poison-message test
 - [ ] 3.8 **Containerization**: Use mig-containerization readiness checks for Kafka connectivity
   - Command: `/skill mig-containerize` (later stage) — flag Kafka broker URL, consumer group, and DLQ topic as required runtime config
 - [ ] 3.9 **Deployment**: Note for mig-deploy — requires Kafka (AMQ Streams) with `orders` and `orders-dlq` topics provisioned before app rollout
-- [ ] 3.10 **Documentation**: Document order pipeline (producer/consumers/channels/DLQ) and transaction boundaries in runbook
+- [x] 3.10 **Documentation**: Document order pipeline (producer/consumers/channels/DLQ) and transaction boundaries in runbook
 
 ## Task Group 4: REST Layer & Static Front End (com.redhat.coolstore.rest)
 
-- [ ] 4.1 Verify `CartEndpoint`, `OrderEndpoint`, `ProductEndpoint`, `RestApplication` use jakarta.ws.rs with unchanged `@Path`/HTTP contracts (front-end `src/main/webapp/app/` JS depends on exact routes and JSON shapes)
-- [ ] 4.2 Serve AngularJS front end as static resources from the Quarkus jar (`src/main/webapp/**`, incl. `index.jsp` → static `index.html` conversion or equivalent routing; replace `health.jsp` with Quarkus `q/health`)
+- [x] 4.1 Verify `CartEndpoint`, `OrderEndpoint`, `ProductEndpoint`, `RestApplication` use jakarta.ws.rs with unchanged `@Path`/HTTP contracts (front-end `src/main/webapp/app/` JS depends on exact routes and JSON shapes)
+- [x] 4.2 Serve AngularJS front end as static resources from the Quarkus jar (`src/main/webapp/**`, incl. `index.jsp` → static `index.html` conversion or equivalent routing; replace `health.jsp` with Quarkus `q/health`)
 - [ ] 4.3 Verify Keycloak JS adapter config (`src/main/webapp/keycloak.json`, `coolstore.json`) against the target realm/client (see Task Group 5)
 - [ ] 4.4 Confirm `quarkus-resteasy-reactive-jackson` serialization matches legacy JAX-RS JSON (field order/naming for cart and product payloads)
 - [ ] 4.5 **Test Generation**: Use mig-test-gen for API contract tests
@@ -66,15 +66,15 @@
   - Expected: `@QuarkusTest` contract tests for every endpoint (status codes, payload shapes vs. baseline captures)
 - [ ] 4.6 **Containerization**: Confirm static assets are inside the container image (affects image size and cache layers)
 - [ ] 4.7 **Deployment**: Note for mig-deploy — Route must serve index at `/` and API under the same origin as front-end AJAX calls
-- [ ] 4.8 **Documentation**: Document API contract freeze list (endpoints, payloads) as the parity reference
+- [x] 4.8 **Documentation**: Document API contract freeze list (endpoints, payloads) as the parity reference
 
 ## Task Group 5: Production Configuration, Security & Integrations
 
-- [ ] 5.1 Implement production PostgreSQL profile: `%prod.quarkus.datasource.*` (jdbc-postgresql), `quarkus.hibernate-orm.database.generation=validate` (never `update` in prod), Flyway as schema authority — replaces TODO(port) in `application.properties`
-- [ ] 5.2 Resolve `audit-logging-library` (lib/audit-logging-library-1.0.0.jar / -2.0.0.jar): `mvn install:install-file` bootstrap or internal repository publication; choose version (2.0.0 unless compatibility analysis says otherwise); uncomment dependency in pom.xml; record decision
-- [ ] 5.3 Wire Keycloak OIDC: import `realm-export.json` (realm `eap`, client `coolstore`) into target Keycloak; set `quarkus.oidc.auth-server-url`, `client-id`, credentials; update front-end `keycloak.json` redirect URIs for OpenShift routes (replaces TODO(port))
+- [x] 5.1 Implement production PostgreSQL profile: `%prod.quarkus.datasource.*` (jdbc-postgresql), `quarkus.hibernate-orm.database.generation=validate` (never `update` in prod), Flyway as schema authority — replaces TODO(port) in `application.properties`
+- [x] 5.2 Resolve `audit-logging-library` (lib/audit-logging-library-1.0.0.jar / -2.0.0.jar): `mvn install:install-file` bootstrap or internal repository publication; choose version (2.0.0 unless compatibility analysis says otherwise); uncomment dependency in pom.xml; record decision
+- [x] 5.3 Wire Keycloak OIDC: import `realm-export.json` (realm `eap`, client `coolstore`) into target Keycloak; set `quarkus.oidc.auth-server-url`, `client-id`, credentials; update front-end `keycloak.json` redirect URIs for OpenShift routes (replaces TODO(port))
 - [ ] 5.4 Triage the 7 potential-secret findings from the rgctl security scan; move all credentials (DB, Kafka, OIDC client secret) to environment variables/OpenShift Secrets; document each finding's disposition
-- [ ] 5.5 Define `%dev`/`%test`/`%prod` profile matrix (H2 dev/test, PostgreSQL prod; Kafka vs. in-memory connector for tests where applicable) and add Quarkus dev services for Kafka/PostgreSQL in dev
+- [x] 5.5 Define `%dev`/`%test`/`%prod` profile matrix (H2 dev/test, PostgreSQL prod; Kafka vs. in-memory connector for tests where applicable) and add Quarkus dev services for Kafka/PostgreSQL in dev
 - [ ] 5.6 **Test Generation**: Use mig-test-gen for security/config tests
   - Command: `/skill mig-test-gen` targeting OIDC-secured checkout flow and profile matrix
   - Expected: auth integration test (401 without token, 200 with), config-per-profile smoke tests
@@ -84,11 +84,11 @@
 - [ ] 5.8 **Deployment**: Use mig-deploy for Keycloak binding and Secret manifest authoring
   - Command: `/skill mig-deploy` for coolstore-quarkus + keycloak
   - Dependencies: PostgreSQL, Kafka, Keycloak
-- [ ] 5.9 **Documentation**: Document configuration matrix and secret inventory in the runbook
+- [x] 5.9 **Documentation**: Document configuration matrix and secret inventory in the runbook
 
 ## Task Group 6: Test Suite, Coverage & Behavior Parity Validation
 
-- [ ] 6.1 Port/verify all 21 test classes to `@QuarkusTest` (quarkus-junit5, rest-assured); fix any test relying on removed Java EE machinery (e.g., EJB container mocks)
+- [x] 6.1 Port/verify all 21 test classes to `@QuarkusTest` (quarkus-junit5, rest-assured); fix any test relying on removed Java EE machinery (e.g., EJB container mocks)
 - [ ] 6.2 Build characterization suite from Java EE baseline: catalog browse, cart add/remove/recalculate (promotions + shipping math), checkout order emission, inventory decrement on order — capture expected values before cutover
 - [ ] 6.3 Add end-to-end checkout test with Keycloak-authenticated user against dev-profile stack (PostgreSQL/Kafka dev-services)
 - [ ] 6.4 Add Kafka failure-path tests: poison message → `orders-dlq`; consumer restart replays from committed offsets (`auto.offset.reset=earliest`)
