@@ -1,0 +1,22 @@
+# CoolStore non-sensitive runtime configuration (mig-containerize, task 6.1).
+# Apply with: oc apply -f configmap.yaml
+# All values here are non-sensitive; credentials live in secret.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coolstore-config
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: coolstore
+    app.kubernetes.io/part-of: coolstore
+    app.kubernetes.io/component: backend
+data:
+  # Kafka bootstrap servers — point at the AMQ Streams (Strimzi) cluster service
+  # in the target namespace, e.g. "<cluster>-kafka-bootstrap:9092".
+  KAFKA_BOOTSTRAP_SERVERS: "coolstore-kafka-bootstrap:9092"
+  # Audit logging TCP sink (audit-logging-library 2.x StreamableAuditLogger).
+  # Replace with the real audit collector endpoint for the target environment.
+  AUDIT_LOGGING_HOST: "audit-collector.apps.example.com"
+  AUDIT_LOGGING_PORT: "9999"
+  # Allowed origins for the AngularJS SPA — set to this deployment's Route URL.
+  CORS_ORIGINS: "https://coolstore.apps.example.com"

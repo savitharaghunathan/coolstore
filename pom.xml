@@ -80,6 +80,13 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-logging-json</artifactId>
         </dependency>
+        <!-- Health endpoints /q/health/{live,ready,started} for OpenShift probes
+             (mig-containerize task 6.2; datasource check via hibernate-orm and Kafka check
+             via reactive-messaging are registered automatically) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
         <!-- Keycloak/OIDC (realm 'eap'; configured in application.properties with env-var secret) -->
         <dependency>
             <groupId>io.quarkus</groupId>

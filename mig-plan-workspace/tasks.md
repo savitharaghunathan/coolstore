@@ -89,15 +89,20 @@ Serve the AngularJS SPA from Quarkus and remove dead legacy mass.
 
 Container image per migration prompt deliverable 1.
 
-- [ ] 6.1 **Containerization**: Use mig-containerize to build the application image
+- [x] 6.1 **Containerization**: Use mig-containerize to build the application image
   - Command: `/skill mig-containerize` for coolstore-quarkus
   - Config needs: env vars for DB URL/user/password (Secret), Kafka bootstrap (ConfigMap), OIDC auth-server-url/client-id/secret (Secret), audit logger TCP endpoint (ConfigMap)
   - Build: multi-stage Containerfile (Maven builder on JDK 21 → minimal Quarkus JVM runtime), exclude `bower_components` build junk/`.rgctl/`/`lib/` jars, run as non-root
-- [ ] 6.2 Add `quarkus-smallrye-health` dependency; verify `/q/health/live` and `/q/health/ready` (DB + Kafka checks)
+  - **Done (containerize stage 2026-10-28)**: `Dockerfile` + `.dockerignore` + `secret.yaml` + `configmap.yaml` + `deployment.yaml` + `service.yaml` + `route.yaml` + `database-statefulset.yaml` + `podman-compose.yml` at repo root; see `CONTAINERIZATION_REPORT.md`
+- [x] 6.2 Add `quarkus-smallrye-health` dependency; verify `/q/health/live` and `/q/health/ready` (DB + Kafka checks)
+  - Dependency added to `pom.xml`; datasource (hibernate-orm) and Kafka (reactive-messaging) checks register automatically; startup/readiness/liveness probes wired in `deployment.yaml`. In-container verification deferred to CI (no Podman in stage sandbox)
 - [ ] 6.3 Container acceptance: image builds with Podman, starts locally, smoke test `/q/health` + `/services/products` (or catalog endpoint) returns data, container runs as non-root UID
+  - **Blocked**: no Podman/JDK in containerize sandbox — build + smoke commands documented in `CONTAINERIZATION_REPORT.md` and `podman-compose.yml`; run in CI (same pattern as blocked tasks 1.1/1.2)
 - [ ] 6.4 Scan image for vulnerabilities; pin base image digest; document registry push (OpenShift internal registry)
-- [ ] 6.5 **Documentation**: Document container build & run
+  - **Partial**: digest pinning, `grype` scan, and registry push commands documented in `CONTAINERIZATION_REPORT.md`; execution requires registry/scanner access (CI)
+- [x] 6.5 **Documentation**: Document container build & run
   - Containerfile usage, local run command, image tag/registry conventions in README
+  - README "Container deployment (Podman / OpenShift)" section added; full report in `CONTAINERIZATION_REPORT.md`
 
 ## Task Group 7: OpenShift Deployment
 

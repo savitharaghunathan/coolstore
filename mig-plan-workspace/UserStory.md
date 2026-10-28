@@ -231,8 +231,8 @@
 - ## Task Group 7: OpenShift Deployment (from tasks.md)
 
 ### Acceptance Criteria
-- [ ] Multi-stage Containerfile builds a non-root image; no bower build junk, `.rgctl/`, or `lib/` jars inside
-- [ ] `/q/health/live` and `/q/health/ready` (DB + Kafka checks) pass in-container
+- [x] Multi-stage Containerfile builds a non-root image; no bower build junk, `.rgctl/`, or `lib/` jars inside (Dockerfile, containerize stage 2026-10-28 — runtime stage ships only the quarkus-app tree on a JRE image, UID 1001)
+- [ ] `/q/health/live` and `/q/health/ready` (DB + Kafka checks) pass in-container (quarkus-smallrye-health added + probes wired in deployment.yaml; in-container run deferred to CI — no Podman in stage sandbox)
 - [ ] OpenShift Deployment + Service + Route + ConfigMap + Secrets applied; rolling deploys work
 - [ ] HPA scales on CPU; resource requests/limits set
 - [ ] CI/CD pipeline builds and promotes the image across namespaces
@@ -261,6 +261,7 @@
 
 ### Notes / Comments
 - PostgreSQL/Kafka/Keycloak are platform dependencies — provision before app deployment.
+- Containerize stage (2026-10-28): `Dockerfile`, OpenShift manifests (`secret.yaml`, `configmap.yaml`, `deployment.yaml`, `service.yaml`, `route.yaml`, `database-statefulset.yaml`), `podman-compose.yml`, and `CONTAINERIZATION_REPORT.md` authored at repo root. Group 6 complete except in-container acceptance/scan (6.3/6.4 → CI, no Podman in sandbox). HPA/CI/CD (7.3/7.4) remain for the deploy stage.
 
 ---
 

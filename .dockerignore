@@ -1,0 +1,36 @@
+# Keep the build context minimal — only pom.xml, lib/ (project-local Maven repo)
+# and src/ are needed to build the image.
+
+# VCS / IDE
+.git
+.gitignore
+.idea
+.vscode
+.settings
+.classpath
+
+# rgctl knowledge-graph index (never in the image)
+.rgctl/
+
+# MigIQ stage artifacts and migration documentation
+mig-prompt-workspace/
+mig-plan-workspace/
+mig-execute-workspace/
+migration/
+rules/
+
+# Repo docs/assets not needed to build the app image
+*.md
+assets/
+realm-export.json
+SETUP.md
+Dockerfile
+.dockerignore
+podman-compose.yml
+*.yaml
+*.yml
+
+# Build outputs and local state
+target/
+.env
+*.log

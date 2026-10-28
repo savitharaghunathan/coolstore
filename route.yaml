@@ -1,0 +1,21 @@
+# CoolStore external access — OpenShift Route (mig-containerize).
+# Apply with: oc apply -f route.yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: coolstore-route
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: coolstore
+    app.kubernetes.io/part-of: coolstore
+spec:
+  to:
+    kind: Service
+    name: coolstore-service
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

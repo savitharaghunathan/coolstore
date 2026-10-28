@@ -1,0 +1,21 @@
+# CoolStore internal networking (mig-containerize).
+# Apply with: oc apply -f service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: coolstore-service
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: coolstore
+    app.kubernetes.io/part-of: coolstore
+spec:
+  selector:
+    app: coolstore
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  type: ClusterIP
+  # Session-free design (cart is cartId-keyed REST state) — no sticky sessions needed
+  sessionAffinity: None

@@ -206,4 +206,15 @@ SPA served from `src/main/resources/META-INF/resources` (index.jsp → index.htm
 ### Audit logging
 `OrderService` emits `AuditEvent` records via `StreamableAuditLogger` (TCP, `logEventAsync`) per rules/rule.yaml audit-logging-0001..0005.
 
+### Container deployment (Podman / OpenShift)
+Multi-stage `Dockerfile` at the repo root: Maven builder on `ubi9/openjdk-21` → Quarkus fast-jar runtime on `ubi9/openjdk-21-runtime`, non-root UID 1001, no source/`lib/`/`.rgctl/` in the image (task 6.1).
+
+```bash
+podman build -t coolstore:1.0.0 -f Dockerfile .          # build
+podman-compose up -d                                       # local stack: app + PostgreSQL + Kafka + Keycloak
+curl http://localhost:8080/q/health/ready                  # health smoke test
+```
+
+OpenShift manifests at the repo root (apply order): `secret.yaml` → `configmap.yaml` → `database-statefulset.yaml` → `deployment.yaml` → `service.yaml` → `route.yaml`. Image registry convention: OpenShift internal registry `image-registry.openshift-image-registry.svc:5000/<namespace>/coolstore:<version>` — pin base-image digests before production (see `CONTAINERIZATION_REPORT.md`). Health endpoints `/q/health/live|ready|started` are provided by `quarkus-smallrye-health` (DB + Kafka checks included).
+
 Legacy JBoss EAP 7.4 instructions follow above.

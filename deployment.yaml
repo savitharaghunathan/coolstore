@@ -1,0 +1,128 @@
+# CoolStore application workload (mig-containerize; probes per tasks 6.2/7.3).
+# Apply AFTER secret.yaml and configmap.yaml:
+#   oc apply -f deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coolstore
+  labels:
+    app: coolstore
+    app.kubernetes.io/name: coolstore
+    app.kubernetes.io/part-of: coolstore
+    app.kubernetes.io/component: backend
+    version: v1
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: coolstore
+  template:
+    metadata:
+      labels:
+        app: coolstore
+        app.kubernetes.io/name: coolstore
+        app.kubernetes.io/part-of: coolstore
+        version: v1
+    spec:
+      # Pod-level security (restricted-v2 compatible)
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: coolstore
+        # OpenShift internal registry (task 6.4 registry strategy)
+        image: image-registry.openshift-image-registry.svc:5000/coolstore/coolstore:1.0.0
+        imagePullPolicy: Always
+        # Container-level security
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        # Non-sensitive configuration
+        envFrom:
+        - configMapRef:
+            name: coolstore-config
+        # Sensitive configuration (task 6.1 grouping: DB + OIDC in Secret)
+        env:
+        - name: QUARKUS_DATASOURCE_JDBC_URL
+          valueFrom:
+            secretKeyRef:
+              name: coolstore-secrets
+              key: QUARKUS_DATASOURCE_JDBC_URL
+        - name: QUARKUS_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: coolstore-secrets
+              key: QUARKUS_DATASOURCE_USERNAME
+        - name: QUARKUS_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: coolstore-secrets
+              key: QUARKUS_DATASOURCE_PASSWORD
+        - name: OIDC_AUTH_SERVER_URL
+          valueFrom:
+            secretKeyRef:
+              name: coolstore-secrets
+              key: OIDC_AUTH_SERVER_URL
+        - name: OIDC_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: coolstore-secrets
+              key: OIDC_CLIENT_ID
+        - name: OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: coolstore-secrets
+              key: OIDC_CLIENT_SECRET
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        # Quarkus smallrye-health endpoints (quarkus-smallrye-health added in pom.xml):
+        # datasource check via hibernate-orm, Kafka check via reactive-messaging.
+        startupProbe:
+          httpGet:
+            path: /q/health/started
+            port: 8080
+          periodSeconds: 5
+          failureThreshold: 24
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        # Writable /tmp for the JVM (root filesystem is read-only)
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}
