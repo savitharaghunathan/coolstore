@@ -16,14 +16,16 @@ data:
 
   # Kafka bootstrap for the `orders` producer + `coolstore-orders`/`coolstore-inventory`
   # consumer groups (application.properties %prod / mp.messaging connector).
-  # `my-cluster-kafka-bootstrap` is created by the Kafka CR in kafka.yaml (AMQ Streams).
-  KAFKA_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap:9092"
+  # mig-deploy stage: this cluster has no AMQ Streams/Strimzi operator (no
+  # kafka.strimzi.io CRDs) — Kafka runs as a plain single-broker KRaft Deployment
+  # (apache/kafka:3.7.0) fronted by the `kafka` Service, so bootstrap is kafka:9092
+  # instead of the Strimzi my-cluster-kafka-bootstrap:9092 from kafka.yaml.
+  KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
 
-  # OIDC — Keycloak realm `eap` (keycloak.yaml provisions it).
-  # IMPORTANT: replace the placeholder host with the real host of the keycloak Route
-  # (`oc get route keycloak -o jsonpath='{.spec.host}'`) BEFORE deploying the app:
-  #   https://<keycloak-route-host>/realms/eap
-  # The app uses the public route URL (not the in-cluster service URL) so that the
-  # token issuer matches the front-end keycloak.json adapter configuration.
-  QUARKUS_OIDC_AUTH_SERVER_URL: "https://keycloak-REPLACE-WITH-ROUTE-HOST/realms/eap"
+  # OIDC — Keycloak realm `eap` (keycloak deployment provisions it).
+  # mig-deploy stage: no OpenShift Route API on this cluster — Keycloak is exposed
+  # via a NodePort Service (keycloak :30181, node IP 10.89.0.2). This URL is also
+  # baked into the front-end keycloak.json at build time so the token issuer
+  # matches between front-end adapter and backend OIDC validation (KI #2).
+  QUARKUS_OIDC_AUTH_SERVER_URL: "http://10.89.0.2:30181/realms/eap"
   QUARKUS_OIDC_CLIENT_ID: "coolstore"

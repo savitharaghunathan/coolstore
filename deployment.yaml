@@ -39,7 +39,10 @@ spec:
           type: RuntimeDefault
       containers:
       - name: coolstore-quarkus
-        image: image-registry.openshift-image-registry.svc:5000/coolstore/coolstore-quarkus:1.0.0
+        # mig-deploy stage: target cluster has no OpenShift internal registry (plain
+        # Kubernetes, single node) — image built in-cluster (buildah) and imported
+        # into the node containerd store under this reference (see DEPLOYMENT_REPORT.md).
+        image: docker.io/coolstore/coolstore-quarkus:1.0.1
         imagePullPolicy: IfNotPresent
         # UBI9 openjdk-17-runtime declares USER 1001 (verified against published
         # Red Hat image metadata) — full hardening below is safe for this image.

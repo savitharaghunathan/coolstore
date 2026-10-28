@@ -37,7 +37,18 @@ public class DataBaseMigrationStartup {
             log.info("Flyway migration skipped (flyway.migrate.enabled=false)");
             return;
         }
-        flyway.baseline();
+        // mig-deploy fix: baselining is only valid on a database that has never
+        // been tracked by Flyway. On redeploy against an already-migrated schema
+        // (e.g. rolling out a new image over an existing PVC) baseline() throws
+        // "Unable to baseline schema history table ... as it already contains
+        // migrations" and crashes startup. Guard it: skip baseline when the
+        // schema history is already initialized.
+        try {
+            flyway.baseline();
+        } catch (FlywayException e) {
+            log.info("Flyway schema history already initialized - skipping baseline ({}))",
+                    e.getMessage());
+        }
         // Start the db.migration
         flyway.migrate();
     }

@@ -1,0 +1,24 @@
+# CoolStore — external exposure (MigIQ deploy stage)
+# This cluster has no route.openshift.io API (plain Kubernetes), so route.yaml
+# cannot be applied. Equivalent external exposure: NodePort Service on :30180
+# (same port the legacy stack used, so existing CORS origins keep working).
+# On a real OpenShift cluster, apply route.yaml instead and skip this file.
+apiVersion: v1
+kind: Service
+metadata:
+  name: coolstore-quarkus-external
+  labels:
+    app: coolstore-quarkus
+    app.kubernetes.io/name: coolstore-quarkus
+    app.kubernetes.io/part-of: coolstore
+    app.kubernetes.io/managed-by: migiq-deploy
+spec:
+  type: NodePort
+  selector:
+    app: coolstore-quarkus
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    nodePort: 30180
+    protocol: TCP
