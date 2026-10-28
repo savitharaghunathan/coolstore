@@ -1,0 +1,78 @@
+# CoolStore — Kafka supporting service (MigIQ containerize stage)
+# Dev/test-grade single-broker Kafka via the AMQ Streams / Strimzi operator.
+# PREREQUISITE: install the AMQ Streams operator (or OSS Strimzi) in the
+# namespace/cluster first — `oc apply -f kafka.yaml` only works with the
+# operator running. Operator-managed pods carry their own security contexts
+# (Strimzi images run as UID 1000, non-root, restricted-v2 compatible), so no
+# security context is authored here.
+apiVersion: kafka.strimzi.io/v1beta2
+kind: Kafka
+metadata:
+  name: my-cluster
+  labels:
+    app.kubernetes.io/part-of: coolstore
+    app.kubernetes.io/managed-by: migiq-containerize
+spec:
+  kafka:
+    version: 3.7.0
+    replicas: 1                    # raise to 3 + RF 3 for production
+    listeners:
+    - name: plain
+      port: 9092
+      type: internal
+      tls: false
+    config:
+      offsets.topic.replication.factor: 1
+      transaction.state.log.replication.factor: 1
+      transaction.state.log.min.isr: 1
+      default.replication.factor: 1
+      min.insync.replicas: 1
+      auto.create.topics.enable: false   # topics provisioned explicitly below
+    storage:
+      type: ephemeral            # use persistent-claim storage for production
+  zookeeper:
+    replicas: 1
+    storage:
+      type: ephemeral
+  entityOperator:
+    topicOperator: {}            # required to reconcile the KafkaTopic CRs below
+    userOperator: {}
+---
+# Order pipeline topic: ShoppingCartOrderProcessor produces; OrderServiceMDB
+# (group coolstore-orders) and InventoryNotificationMDB (group coolstore-inventory)
+# consume — distinct groups preserve the JMS topic broadcast semantics.
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: orders
+  labels:
+    strimzi.io/cluster: my-cluster
+    app.kubernetes.io/part-of: coolstore
+spec:
+  partitions: 3
+  replicas: 1
+  config:
+    retention.ms: 604800000
+---
+# Dead-letter queues for the two consumers' failure-strategy=dead-letter-queue
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: orders-dlq
+  labels:
+    strimzi.io/cluster: my-cluster
+    app.kubernetes.io/part-of: coolstore
+spec:
+  partitions: 1
+  replicas: 1
+---
+apiVersion: kafka.strimzi.io/v1beta2
+kind: KafkaTopic
+metadata:
+  name: inventory-dlq
+  labels:
+    strimzi.io/cluster: my-cluster
+    app.kubernetes.io/part-of: coolstore
+spec:
+  partitions: 1
+  replicas: 1

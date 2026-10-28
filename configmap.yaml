@@ -1,0 +1,29 @@
+# CoolStore — non-sensitive runtime configuration (MigIQ containerize stage, TG 5.7/7.x)
+# Consumed by deployment.yaml via envFrom.configMapRef.
+# Apply into the target project: oc apply -f configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coolstore-config
+  labels:
+    app.kubernetes.io/name: coolstore-quarkus
+    app.kubernetes.io/part-of: coolstore
+    app.kubernetes.io/managed-by: migiq-containerize
+data:
+  # %prod datasource URL (non-sensitive; credentials live in the coolstore-secrets Secret).
+  # `postgres` is the headless Service defined in postgres.yaml.
+  QUARKUS_DATASOURCE_JDBC_URL: "jdbc:postgresql://postgres:5432/coolstore"
+
+  # Kafka bootstrap for the `orders` producer + `coolstore-orders`/`coolstore-inventory`
+  # consumer groups (application.properties %prod / mp.messaging connector).
+  # `my-cluster-kafka-bootstrap` is created by the Kafka CR in kafka.yaml (AMQ Streams).
+  KAFKA_BOOTSTRAP_SERVERS: "my-cluster-kafka-bootstrap:9092"
+
+  # OIDC — Keycloak realm `eap` (keycloak.yaml provisions it).
+  # IMPORTANT: replace the placeholder host with the real host of the keycloak Route
+  # (`oc get route keycloak -o jsonpath='{.spec.host}'`) BEFORE deploying the app:
+  #   https://<keycloak-route-host>/realms/eap
+  # The app uses the public route URL (not the in-cluster service URL) so that the
+  # token issuer matches the front-end keycloak.json adapter configuration.
+  QUARKUS_OIDC_AUTH_SERVER_URL: "https://keycloak-REPLACE-WITH-ROUTE-HOST/realms/eap"
+  QUARKUS_OIDC_CLIENT_ID: "coolstore"

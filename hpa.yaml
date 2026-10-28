@@ -1,0 +1,27 @@
+# CoolStore — autoscaling (MigIQ containerize stage, plan task 8.1)
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: coolstore-quarkus
+  labels:
+    app: coolstore-quarkus
+    app.kubernetes.io/name: coolstore-quarkus
+    app.kubernetes.io/part-of: coolstore
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: coolstore-quarkus
+  minReplicas: 1
+  # Kafka consumers (coolstore-orders / coolstore-inventory groups) scale
+  # safely. REST cart traffic relies on ClientIP affinity + in-memory carts,
+  # so raise maxReplicas only after cart state is externalized (report, Known
+  # Issues) or accept cross-pod cart misses during scaling events.
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70

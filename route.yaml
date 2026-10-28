@@ -1,0 +1,21 @@
+# CoolStore — external Route (MigIQ containerize stage)
+# Edge TLS termination; HTTP redirected to HTTPS. Front end + API on one origin.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: coolstore
+  labels:
+    app: coolstore-quarkus
+    app.kubernetes.io/name: coolstore-quarkus
+    app.kubernetes.io/part-of: coolstore
+spec:
+  to:
+    kind: Service
+    name: coolstore-quarkus
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None

@@ -78,6 +78,13 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-oidc</artifactId>
         </dependency>
+        <!-- Health endpoints (MigIQ containerize stage, TG 7.4): liveness/readiness probes
+             in deployment.yaml target /q/health/live and /q/health/ready. Without this
+             extension those endpoints return 404 and the OpenShift probes fail. -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-smallrye-health</artifactId>
+        </dependency>
         <!-- Audit Logging Library (TG 5.2): custom com.enterprise jar bootstrapped into the
              local repository via mvn install:install-file (see mig-execute-workspace
              execution-log). Version 2.0.0 chosen per migration inventory recommendation. -->

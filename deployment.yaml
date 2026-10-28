@@ -1,0 +1,101 @@
+# CoolStore — application workload (MigIQ containerize stage, TG 7.6/8.1)
+# Image: built from the repo-root Dockerfile, pushed to the OpenShift internal
+# registry (immutable tag). Adjust the registry namespace if your project differs.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coolstore-quarkus
+  labels:
+    app: coolstore-quarkus
+    app.kubernetes.io/name: coolstore-quarkus
+    app.kubernetes.io/part-of: coolstore
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: migiq-containerize
+spec:
+  # 2 replicas for pod-failure HA. NOTE: ShoppingCartService keeps cartId-keyed
+  # carts in pod memory (@ApplicationScoped map — see mig-execute refactor), so
+  # the Service uses sessionAffinity: ClientIP to keep one browser on one pod.
+  # Scale-out beyond that requires externalizing cart state (report, Known Issues).
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: coolstore-quarkus
+  template:
+    metadata:
+      labels:
+        app: coolstore-quarkus
+        app.kubernetes.io/name: coolstore-quarkus
+        app.kubernetes.io/part-of: coolstore
+        app.kubernetes.io/version: "1.0.0"
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: coolstore-quarkus
+        image: image-registry.openshift-image-registry.svc:5000/coolstore/coolstore-quarkus:1.0.0
+        imagePullPolicy: IfNotPresent
+        # UBI9 openjdk-17-runtime declares USER 1001 (verified against published
+        # Red Hat image metadata) — full hardening below is safe for this image.
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1001
+          capabilities:
+            drop: ["ALL"]
+          readOnlyRootFilesystem: true
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "512Mi"
+          limits:
+            cpu: "1"
+            memory: "1Gi"
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        # Non-sensitive config (DB URL, Kafka bootstrap, OIDC URL/client-id)
+        envFrom:
+        - configMapRef:
+            name: coolstore-config
+        # Sensitive values only via Secret refs — never baked into the image
+        env:
+        - name: QUARKUS_DATASOURCE_USERNAME
+          valueFrom:
+            secretKeyRef: { name: coolstore-secrets, key: QUARKUS_DATASOURCE_USERNAME }
+        - name: QUARKUS_DATASOURCE_PASSWORD
+          valueFrom:
+            secretKeyRef: { name: coolstore-secrets, key: QUARKUS_DATASOURCE_PASSWORD }
+        - name: QUARKUS_OIDC_CREDENTIALS_SECRET
+          valueFrom:
+            secretKeyRef: { name: coolstore-secrets, key: QUARKUS_OIDC_CREDENTIALS_SECRET }
+        readinessProbe:
+          httpGet:
+            path: /q/health/ready
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        livenessProbe:
+          httpGet:
+            path: /q/health/live
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        # Writable /tmp for the JVM (root filesystem is read-only)
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: tmp
+        emptyDir: {}

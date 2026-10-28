@@ -1,0 +1,22 @@
+# CoolStore — internal Service (MigIQ containerize stage)
+apiVersion: v1
+kind: Service
+metadata:
+  name: coolstore-quarkus
+  labels:
+    app: coolstore-quarkus
+    app.kubernetes.io/name: coolstore-quarkus
+    app.kubernetes.io/part-of: coolstore
+spec:
+  type: ClusterIP
+  selector:
+    app: coolstore-quarkus
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+    protocol: TCP
+  # ClientIP affinity is intentional: ShoppingCartService keeps cartId-keyed
+  # carts in pod memory, so a browser session must stick to one pod. Remove
+  # once cart state is externalized (CONTAINERIZATION_REPORT.md, Known Issues).
+  sessionAffinity: ClientIP
